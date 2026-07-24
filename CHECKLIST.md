@@ -81,11 +81,16 @@ repo root: `vercel deploy --prod --force --yes`.
 ## 5. Before submitting (5:00 PM)
 
 - [x] **Deployed** app link, not localhost — https://swans-medical-timeline.vercel.app
-- [ ] List of assumptions (e.g. "assumes a Gemini API key")
-- [ ] Note on where the data lives (client-side / localStorage is a valid answer)
+- [x] List of assumptions — drafted in [`SUBMISSION.md`](./SUBMISSION.md), review before submitting
+- [x] Note on where the data lives — drafted in [`SUBMISSION.md`](./SUBMISSION.md)
 - [x] Approximate cost per case processed — real numbers measured in
       [`docs/custo-por-caso.md`](./docs/custo-por-caso.md) (~$0.05 to ~$1.00
       per case, depending on size)
-- [ ] Short paragraph: what you built and what you're proud of
-- [ ] Tested end-to-end with a new Excel, no errors in the browser
+- [x] Short paragraph: what you built and what you're proud of — drafted in
+      [`SUBMISSION.md`](./SUBMISSION.md), **make it your own before submitting**
+- [x] Tested with a brand-new synthetic Excel (not one of the 5 samples) —
+      caught and fixed a real bug (provider names shredded by comma-splitting).
+      Verified via the actual parser logic, not yet clicked through in a real
+      browser (no browser access available this session) — do a manual
+      click-through before submitting if you can
 - [ ] Link submitted **before 5:00 PM** (the earlier you submit, the earlier you present)
