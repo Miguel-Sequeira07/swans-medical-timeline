@@ -1,11 +1,11 @@
 import type { Case, MedicalEvent, Milestone } from "@/types/event";
 
 /**
- * Lógica pura de filtragem/agrupamento da timeline (Pessoa B). Mantida
- * separada do componente para ser fácil de testar e para o `Timeline.tsx`
- * ficar focado em renderização. Não assume nada sobre o conteúdo dos
- * valores (providers/medicineType/bodyParts) — só agrupa e filtra pelo
- * que existir nos dados.
+ * Pure filtering/grouping logic for the timeline (Person B). Kept
+ * separate from the component so it's easy to test and so
+ * `Timeline.tsx` stays focused on rendering. Assumes nothing about the
+ * content of the values (providers/medicineType/bodyParts) — it just
+ * groups and filters by whatever exists in the data.
  */
 
 export type GroupBy = "month" | "provider" | "medicineType" | "bodyPart";

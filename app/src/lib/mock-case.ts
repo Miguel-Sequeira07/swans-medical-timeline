@@ -1,10 +1,11 @@
 import type { Case, MedicalEvent, Milestone } from "@/types/event";
 
 /**
- * Dados de demonstração para a timeline (Pessoa B) enquanto o parser real
- * (Pessoa A, `lib/parse-excel.ts`) não está ligado à UI. Segue exatamente
- * `MedicalEvent[]` / `Milestone[]` — trocar por dados reais assim que o
- * upload estiver pronto, sem alterar o consumidor (`Timeline`).
+ * Demo data for the timeline (Person B) for local development/testing
+ * without going through a real upload. Follows `MedicalEvent[]` /
+ * `Milestone[]` exactly — the real app now gets its data from the
+ * upload flow in `page.tsx`; this fixture is just a standalone way to
+ * exercise the `Timeline` component.
  */
 
 function d(iso: string): Date {
@@ -240,8 +241,8 @@ const events: MedicalEvent[] = [
   },
   {
     id: "evt-22",
-    // Data em falta no Excel de origem — não deve partir a timeline, deve
-    // aparecer numa secção separada em vez de ser descartada silenciosamente.
+    // Missing date in the source Excel — must not break the timeline,
+    // should show up in a separate section instead of being silently dropped.
     date: new Date(NaN),
     providers: ["Dr. Simone Kessler"],
     facility: "Bayview Pain & Spine Institute",
@@ -255,23 +256,23 @@ const events: MedicalEvent[] = [
 const milestones: Milestone[] = [
   {
     id: "milestone-accident",
-    label: "Acidente de viação",
+    label: "Car accident",
     date: d("2023-03-14"),
     type: "accident",
-    notes: "Colisão traseira na Route 9, Northbrook.",
+    notes: "Rear-end collision on Route 9, Northbrook.",
   },
   {
     id: "milestone-mmi",
-    label: "Melhoria médica máxima (MMI)",
+    label: "Maximum medical improvement (MMI)",
     date: d("2023-11-15"),
     type: "custom",
-    notes: "Ambos os providers principais consideram o tratamento estabilizado.",
+    notes: "Both primary providers consider treatment stabilized.",
   },
 ];
 
 export const mockCase: Case = {
   id: "case-mock-001",
-  name: "Caso de demonstração — Doe v. Sample Trucking Co.",
+  name: "Demo case — Doe v. Sample Trucking Co.",
   events,
   milestones,
   createdAt: d("2023-03-14"),

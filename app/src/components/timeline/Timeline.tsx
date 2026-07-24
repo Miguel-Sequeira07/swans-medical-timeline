@@ -19,10 +19,11 @@ import {
 import { FilterBar } from "./FilterBar";
 
 /**
- * Componente central da timeline (Pessoa B). Recebe um `Case` já parseado
- * (ver src/types/event.ts) e não assume nada sobre o conteúdo dos dados —
- * só a forma do schema é garantida (regra de ouro do desafio). Filtragem e
- * agrupamento vivem em `lib/timeline.ts`; este ficheiro só renderiza.
+ * Central timeline component (Person B). Receives an already-parsed
+ * `Case` (see src/types/event.ts) and assumes nothing about the content
+ * of the data — only the shape of the schema is guaranteed (golden rule
+ * of the challenge). Filtering and grouping live in `lib/timeline.ts`;
+ * this file only renders.
  */
 
 const ACCENTS = [

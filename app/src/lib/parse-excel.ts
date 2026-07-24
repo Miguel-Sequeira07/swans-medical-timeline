@@ -2,13 +2,14 @@ import * as XLSX from "xlsx";
 import type { MedicalEvent } from "@/types/event";
 
 /**
- * Regra de ouro do desafio: isto tem de funcionar com qualquer Excel neste
- * formato, não só com o ficheiro de amostra. Não assumir valores fixos de
- * provider/facility/medicine type — só a forma das colunas é garantida.
+ * Golden rule of the challenge: this has to work with any Excel in this
+ * format, not just the sample file. Don't assume fixed values for
+ * provider/facility/medicine type — only the shape of the columns is
+ * guaranteed.
  *
- * "Link To Pdf" nos ficheiros reais do hackathon não é uma célula de texto
- * com o URL — é a palavra "pdf" com um hyperlink por baixo (cell.l.Target).
- * `sheet_to_json` ignora hyperlinks, por isso lemos célula a célula.
+ * "Link To Pdf" in the real hackathon files isn't a text cell with the
+ * URL — it's the word "pdf" with a hyperlink underneath (cell.l.Target).
+ * `sheet_to_json` ignores hyperlinks, so we read cell by cell instead.
  */
 const EXPECTED_COLUMNS = [
   "Encounter Date",
@@ -52,7 +53,7 @@ export async function parseExcelFile(file: File): Promise<MedicalEvent[]> {
 
     const summary = get("Summary")?.text.trim() ?? "";
     const encounterDate = get("Encounter Date");
-    if (!summary && !encounterDate?.text) continue; // linha em branco, ignora
+    if (!summary && !encounterDate?.text) continue; // blank row, skip
 
     const pdfCell = get("Link To Pdf");
 

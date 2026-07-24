@@ -1,76 +1,74 @@
-# Contexto do projeto — Medical Timeline (Applied AI Hackathon, Swans)
+# Project context — Medical Timeline (Applied AI Hackathon, Swans)
 
-Lê isto antes de mexer em código. Detalhe completo em [`README.md`](./README.md)
-e [`Hackathon Slides July 2026.pdf`](./Hackathon%20Slides%20July%202026.pdf).
-Checklist do dia em [`CHECKLIST.md`](./CHECKLIST.md).
+Read this before touching any code. Full detail in [`README.md`](./README.md)
+and [`Hackathon Slides July 2026.pdf`](./Hackathon%20Slides%20July%202026.pdf).
+Day-of checklist in [`CHECKLIST.md`](./CHECKLIST.md).
 
-## O que estamos a construir
+## What we're building
 
-Uma app que recebe um Excel de eventos médicos (um caso de danos pessoais nos
-EUA) e produz uma **timeline visual e utilizável** do tratamento, para
-advogados usarem com júris, clientes e seguradoras.
+An app that ingests an Excel of medical events (a US personal-injury case)
+and produces a **visual, usable timeline** of the treatment, for attorneys
+to use with juries, clients, and insurers.
 
-Deadline de submissão: **hoje às 17:00**.
+Submission deadline: **today at 5:00 PM**.
 
-## A regra de ouro (não quebrar isto)
+## The golden rule (don't break this)
 
-A app tem de funcionar com **qualquer** Excel no formato descrito abaixo, não
-só com o ficheiro de amostra. Os juízes testam no fim com um caso nunca visto.
-**Nunca hardcode** valores da amostra (nomes de providers, tipos de medicina,
-datas específicas, etc.) — só a *forma* das colunas é garantida.
+The app must work with **any** Excel in the format described below, not
+just the sample file. Judges test at the end with a case they've never
+seen. **Never hardcode** sample values (provider names, medicine types,
+specific dates, etc.) — only the *shape* of the columns is guaranteed.
 
-## Formato do Excel de input
+## Input Excel format
 
-Uma linha = um encontro médico:
+One row = one medical encounter:
 
 ```
 Encounter Date | Primary Provider | Facility | Body Parts | Medicine Type | Record Type | Summary | Link To Pdf
 ```
 
-**Não está no Excel:** a data do acidente. A app tem de permitir ao
-utilizador adicioná-la manualmente como marco.
+**Not in the Excel:** the accident date. The app must let the user add it
+manually as a milestone.
 
-## Ordem de prioridade
+## Priority order
 
-1. **Floor** (obrigatório, antes de tudo): carregar o Excel → parse para
-   eventos estruturados → renderizar timeline onde cada evento é visível.
-2. **Ceiling** (onde se ganha): profundidade em poucas features bem feitas,
-   não checklist superficial. Lista completa no `README.md`.
+1. **Floor** (mandatory, before anything else): load the Excel → parse into
+   structured events → render a timeline where every event is visible.
+2. **Ceiling** (where you win): depth on a few well-executed features,
+   not a shallow checklist. Full list in `README.md`.
 
-## Schema partilhado — não mudar sem avisar o resto da equipa
+## Shared schema — don't change without telling the rest of the team
 
-`app/src/types/event.ts` define `MedicalEvent`, `Milestone`, `Case`. É a
-fronteira entre o trabalho da Pessoa A (dados/AI) e da Pessoa B
-(timeline/UX). Ler esse ficheiro antes de escrever qualquer código que toque
-em dados.
+`app/src/types/event.ts` defines `MedicalEvent`, `Milestone`, `Case`. It's
+the boundary between Person A's work (data/AI) and Person B's
+(timeline/UX). Read that file before writing any code that touches data.
 
 ## Stack
 
-Next.js + React + TypeScript (`app/`), Tailwind CSS, `xlsx` para parsing,
-`@google/genai` (Gemini, modelo `gemini-3.6-flash` — **não** o pacote
-`@google/generative-ai`, descontinuado, nem `gemini-2.0-flash`, desligado
-a 1 jun 2026) para AI, `jspdf`/`pptxgenjs` para export, `localStorage`
-para persistência client-side. Deploy no Vercel.
+Next.js + React + TypeScript (`app/`), Tailwind CSS, `xlsx` for parsing,
+`@google/genai` (Gemini, model `gemini-3.6-flash` — **not** the
+deprecated `@google/generative-ai` package, and not `gemini-2.0-flash`,
+retired on Jun 1 2026) for AI, `jspdf`/`pptxgenjs` for export,
+`localStorage` for client-side persistence. Deployed on Vercel.
 
-## Idioma: tudo o que o utilizador vê é em inglês
+## Language: everything is in English
 
-Os utilizadores reais são advogados/júris nos EUA, e os juízes do
-hackathon usam a app diretamente — confirmado a testar com uma API key
-real que um prompt em português faz o Gemini responder em português, o
-que seria inutilizável. Regra: **UI, mensagens de erro, e prompts/output
-de AI em inglês, sempre.** Comentários de código, commits e documentação
-interna (este ficheiro, README, CHECKLIST, docs/) continuam em português
-— é só o que o utilizador final vê que muda.
+Real users are US attorneys/juries, and the hackathon judges use the app
+directly — confirmed by testing with a real API key that a Portuguese
+prompt makes Gemini answer in Portuguese, which would be unusable. Rule:
+**UI, error messages, code comments, commits, and all project
+documentation (this file, README, CHECKLIST, docs/) are in English,
+always.** There is no internal-only exception — everything is English.
 
-## Quem faz o quê
+## Who does what
 
-- **Pessoa A — Dados & AI**: contexto detalhado em [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md)
-- **Pessoa B — Timeline & UX**: contexto detalhado em [`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md)
+- **Person A — Data & AI**: detailed context in [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md)
+- **Person B — Timeline & UX**: detailed context in [`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md)
 
-## Convenções de trabalho
+## Working conventions
 
-- Commits pequenos e frequentes, push direto para `master` (sem branches
-  longas — não há tempo hoje).
-- Antes de dar uma feature por fechada, testar com um Excel diferente da
-  amostra.
-- Deploy cedo no Vercel, iterar em produção.
+- Small, frequent commits, push straight to `master` (no long-lived
+  branches — no time for that today).
+- Before calling a feature done, test it with an Excel different from
+  the sample.
+- Deploy early on Vercel, iterate in production.

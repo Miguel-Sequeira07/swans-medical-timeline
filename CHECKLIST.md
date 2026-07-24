@@ -1,78 +1,80 @@
-# Checklist do dia — Medical Timeline
+# Day-of checklist — Medical Timeline
 
-Deadline de submissão: **17:00**. Marcar cada item à medida que se avança.
-Contexto completo em [`README.md`](./README.md) e [`CLAUDE.md`](./CLAUDE.md).
-Contexto individual: [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md) ·
-[`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md) — cola no teu
-assistente de AI no início do dia.
+Submission deadline: **5:00 PM**. Check off each item as you go. Full
+context in [`README.md`](./README.md) and [`CLAUDE.md`](./CLAUDE.md).
+Individual context: [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md) ·
+[`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md) — paste into
+your AI assistant at the start of the day.
 
-## 0. Antes de codar (ambos, ~15 min)
+## 0. Before coding (both, ~15 min)
 
-- [ ] Colega aceitou o convite do repo: https://github.com/Miguel-Sequeira07/swans-medical-timeline
-- [ ] `git clone` local feito por ambos, `cd app && npm install` a correr sem erros
-- [ ] Gemini API key obtida e colocada em `app/.env.local` (ver `app/.env.local.example`)
-- [ ] Excel de amostra do hackathon (QR "Slides & Excel files") descarregado e guardado localmente para testes
-- [ ] Confirmar rápido: schema em `app/src/types/event.ts` serve para os dois — se precisar de mudar, avisar o outro antes de mexer
+- [ ] Teammate accepted the repo invite: https://github.com/Miguel-Sequeira07/swans-medical-timeline
+- [ ] Both did a local `git clone`, `cd app && npm install` runs with no errors
+- [ ] Gemini API key obtained and set in `app/.env.local` (see `app/.env.local.example`)
+- [ ] Hackathon sample Excel (QR "Slides & Excel files") downloaded and saved locally for testing
+- [ ] Quick confirmation: the schema in `app/src/types/event.ts` works for both — if it needs to change, tell the other person before touching it
 
-## Descobertas ao validar com dados reais (5 Excel em `sample-data/`)
+## Findings from validating with real data (5 Excel files in `sample-data/`)
 
-- [x] **Bug corrigido:** `Link To Pdf` não é texto com o URL — é a palavra
-  "pdf" com um **hyperlink** por baixo da célula. `parse-excel.ts` já lê o
-  hyperlink real (`cell.l.Target`), não o texto visível.
-- **Linhas sem data existem de verdade** (ex.: "Administrative Record" sem
-  `Encounter Date`, 7 casos no ficheiro Caldwell). O parser devolve
-  `Date(NaN)` para essas — a timeline (Pessoa B) tem de as mostrar sem
-  rebentar (ex. secção "sem data"), não assumir que toda a linha tem data.
-- **Escala varia muito**: 49 a 820 eventos por caso nos 5 ficheiros de
-  amostra. Testar a timeline com o Garrison (820 linhas) para performance/
-  legibilidade, não só com casos pequenos.
-- 2 dos 5 ficheiros (`Middleswarth`, `Rogers`) têm links reais para PDFs
-  que existem em `sample-data/Medical Records/` — bons para testar
-  "clicar num evento → abrir PDF fonte" de ponta a ponta.
+- [x] **Bug fixed:** `Link To Pdf` isn't text containing the URL — it's
+  the word "pdf" with a **hyperlink** underneath the cell.
+  `parse-excel.ts` now reads the actual hyperlink (`cell.l.Target`),
+  not the visible text.
+- **Rows with no date genuinely exist** (e.g. "Administrative Record"
+  with no `Encounter Date`, 7 cases in the Caldwell file). The parser
+  returns `Date(NaN)` for those — the timeline (Person B) has to show
+  them without breaking (e.g. an "undated" section), not assume every
+  row has a date.
+- **Scale varies a lot**: 49 to 820 events per case across the 5 sample
+  files. Test the timeline with Garrison (820 rows) for performance/
+  readability, not just with small cases.
+- 2 of the 5 files (`Middleswarth`, `Rogers`) have real links to PDFs
+  that exist in `sample-data/Medical Records/` — good for testing
+  "click an event → open source PDF" end to end.
 
-## 1. Floor — bloqueia tudo o resto, fazer primeiro
+## 1. Floor — blocks everything else, do this first
 
-- [ ] **Pessoa A** — upload de Excel na UI → `parseExcelFile()` → estado da app
-- [ ] **Pessoa A** — testado com o Excel de amostra real (não só dados inventados)
-- [ ] **Pessoa B** — `Timeline.tsx` a renderizar a lista de eventos recebida (ainda pode ser visual simples)
-- [ ] **Ambos** — fluxo ponta-a-ponta a funcionar: upload → parse → timeline visível, sem hardcode dos dados de amostra
-- [ ] Primeiro deploy no Vercel feito (mesmo que feio) — deploy cedo, iterar em produção
+- [ ] **Person A** — Excel upload in the UI → `parseExcelFile()` → app state
+- [ ] **Person A** — tested with the real sample Excel (not just made-up data)
+- [ ] **Person B** — `Timeline.tsx` rendering the received event list (can still be visually simple)
+- [ ] **Both** — end-to-end flow working: upload → parse → timeline visible, no hardcoding of sample data
+- [ ] First Vercel deploy done (even if ugly) — deploy early, iterate in production
 
-## 2. Pessoa A — Dados & AI
+## 2. Person A — Data & AI
 
-- [ ] Validação/erro claro quando o Excel não segue o formato esperado
-- [ ] Modelo + UI para adicionar a **data do acidente** / milestones manuais (não vem do Excel)
-- [ ] AI Q&A sobre o caso (`askCaseQuestion` já existe em `lib/ai.ts` — ligar à UI)
-- [ ] AI: resumo do tratamento completo (`summarizeTreatment` — ligar à UI)
-- [ ] AI: reescrever/editar um summary (manual ou com AI)
-- [ ] Persistência local — guardar/carregar timelines anteriores (`localStorage`)
-- [ ] Calcular custo aproximado por caso (tokens Gemini × preço) — precisa para a submissão
+- [ ] Clear validation/error when the Excel doesn't match the expected format
+- [ ] Model + UI to add the **accident date** / manual milestones (not in the Excel)
+- [ ] AI Q&A about the case (`askCaseQuestion` already exists in `lib/ai.ts` — wire it to the UI)
+- [ ] AI: full treatment summary (`summarizeTreatment` — wire it to the UI)
+- [ ] AI: rewrite/edit a summary (manual or AI-assisted)
+- [ ] Local persistence — save/load previous timelines (`localStorage`)
+- [ ] Calculate approximate cost per case (Gemini tokens × price) — needed for the submission
 
-## 3. Pessoa B — Timeline & UX
+## 3. Person B — Timeline & UX
 
-- [ ] Timeline visual real (não lista simples): eixo temporal, densidade de eventos legível
-- [ ] Filtros: provider, tipo de medicina, data, keyword
-- [ ] Agrupamento: por provider / tipo de medicina / parte do corpo
-- [ ] Clicar num evento → abrir `pdfUrl` (o PDF fonte)
-- [ ] Vista compacta (overview) vs vista detalhada (walkthrough)
-- [ ] Vista "antes/depois" do acidente (usa o milestone da Pessoa A)
-- [ ] Export para PDF
-- [ ] Export para PowerPoint
-- [ ] Responsivo, sem instruções complexas para usar ("ease of use" é critério de avaliação)
+- [ ] Real visual timeline (not a plain list): time axis, readable event density
+- [ ] Filters: provider, medicine type, date, keyword
+- [ ] Grouping: by provider / medicine type / body part
+- [ ] Click an event → open `pdfUrl` (the source PDF)
+- [ ] Compact view (overview) vs detailed view (walkthrough)
+- [ ] "Before/after" the accident view (uses Person A's milestone)
+- [ ] Export to PDF
+- [ ] Export to PowerPoint
+- [ ] Responsive, no complex instructions needed to use it ("ease of use" is an evaluation criterion)
 
-## 4. Integração contínua (ambos, o dia todo)
+## 4. Continuous integration (both, all day)
 
-- [ ] Commits pequenos, push frequente para `master`
-- [ ] Sem branches longas — merge assim que uma feature funciona
-- [ ] Redeploy no Vercel a cada marco importante
-- [ ] Testar a app com um Excel **diferente** da amostra antes de dar qualquer feature por fechada (regra de ouro do desafio)
+- [ ] Small commits, frequent pushes to `master`
+- [ ] No long-lived branches — merge as soon as a feature works
+- [ ] Redeploy on Vercel at every important milestone
+- [ ] Test the app with an Excel **different** from the sample before calling any feature done (golden rule of the challenge)
 
-## 5. Antes de submeter (17:00)
+## 5. Before submitting (5:00 PM)
 
-- [ ] Link da app **deployed**, não localhost
-- [ ] Lista de assumptions (ex.: "assume uma Gemini API key")
-- [ ] Nota sobre onde os dados ficam (client-side / localStorage é resposta válida)
-- [ ] Custo aproximado por caso processado
-- [ ] Parágrafo curto: o que construíram e do que se orgulham
-- [ ] Testado end-to-end com Excel novo, sem erros no browser
-- [ ] Link submetido **antes das 17:00** (quanto mais cedo, mais cedo apresentam)
+- [ ] **Deployed** app link, not localhost
+- [ ] List of assumptions (e.g. "assumes a Gemini API key")
+- [ ] Note on where the data lives (client-side / localStorage is a valid answer)
+- [ ] Approximate cost per case processed
+- [ ] Short paragraph: what you built and what you're proud of
+- [ ] Tested end-to-end with a new Excel, no errors in the browser
+- [ ] Link submitted **before 5:00 PM** (the earlier you submit, the earlier you present)
