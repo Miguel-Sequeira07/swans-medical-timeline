@@ -803,32 +803,23 @@ function EventCard({
   const [isRephrasing, setIsRephrasing] = useState(false);
   const [rephraseError, setRephraseError] = useState<string | null>(null);
 
-  function stopCardNavigation(e: { preventDefault: () => void; stopPropagation: () => void }) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  function startEditing(e: { preventDefault: () => void; stopPropagation: () => void }) {
-    stopCardNavigation(e);
+  function startEditing() {
     setDraft(event.summary);
     setRephraseError(null);
     setIsEditing(true);
   }
 
-  function cancelEditing(e: { preventDefault: () => void; stopPropagation: () => void }) {
-    stopCardNavigation(e);
+  function cancelEditing() {
     setIsEditing(false);
     setRephraseError(null);
   }
 
-  function save(e: { preventDefault: () => void; stopPropagation: () => void }) {
-    stopCardNavigation(e);
+  function save() {
     onUpdateEventSummary?.(event.id, draft.trim());
     setIsEditing(false);
   }
 
-  async function rephraseWithAI(e: { preventDefault: () => void; stopPropagation: () => void }) {
-    stopCardNavigation(e);
+  async function rephraseWithAI() {
     setIsRephrasing(true);
     setRephraseError(null);
     try {
@@ -883,10 +874,7 @@ function EventCard({
 
       {onUpdateEventSummary &&
         (isEditing ? (
-          <div
-            className="mt-2.5 rounded-md border border-paper-line bg-background/60 p-2.5"
-            onClick={stopCardNavigation}
-          >
+          <div className="mt-2.5 rounded-md border border-paper-line bg-background/60 p-2.5">
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -939,25 +927,23 @@ function EventCard({
       )}
 
       {hasPdf && (
-        <p className="mt-2.5 text-xs font-medium text-accent-slate group-hover:underline">
+        <a
+          href={event.pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2.5 inline-block text-xs font-medium text-accent-slate hover:underline"
+        >
           View source document &#8599;
-        </p>
+        </a>
       )}
     </>
   );
 
-  const className =
-    "group block rounded-lg border border-paper-line bg-paper px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md";
-
-  if (hasPdf) {
-    return (
-      <a href={event.pdfUrl} target="_blank" rel="noopener noreferrer" className={className}>
-        {inner}
-      </a>
-    );
-  }
-
-  return <div className={className}>{inner}</div>;
+  return (
+    <div className="rounded-lg border border-paper-line bg-paper px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      {inner}
+    </div>
+  );
 }
 
 function MilestoneRow({ milestone }: { milestone: Milestone }) {
