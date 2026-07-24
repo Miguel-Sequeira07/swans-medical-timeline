@@ -72,7 +72,9 @@ assistente de AI no início do dia.
 - [ ] Link da app **deployed**, não localhost
 - [ ] Lista de assumptions (ex.: "assume uma Gemini API key")
 - [ ] Nota sobre onde os dados ficam (client-side / localStorage é resposta válida)
-- [ ] Custo aproximado por caso processado
+- [x] Custo aproximado por caso processado — números reais medidos em
+      [`docs/custo-por-caso.md`](./docs/custo-por-caso.md) (~$0,05 a ~$1,00
+      por caso, conforme o tamanho)
 - [ ] Parágrafo curto: o que construíram e do que se orgulham
 - [ ] Testado end-to-end com Excel novo, sem erros no browser
 - [ ] Link submetido **antes das 17:00** (quanto mais cedo, mais cedo apresentam)
