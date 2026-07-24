@@ -60,7 +60,7 @@ export async function parseExcelFile(file: File): Promise<MedicalEvent[]> {
     events.push({
       id: `evt-${r}`,
       date: parseDate(encounterDate?.raw ?? encounterDate?.text),
-      providers: splitList(get("Primary Provider")?.text),
+      providers: splitProviders(get("Primary Provider")?.text),
       facility: get("Facility")?.text.trim() ?? "",
       bodyParts: splitList(get("Body Parts")?.text),
       medicineType: get("Medicine Type")?.text.trim() ?? "",
@@ -95,6 +95,22 @@ function splitList(value: string | undefined): string[] {
   if (!value) return [];
   return value
     .split(/[;,]/)
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Providers can't use the generic comma-or-semicolon split: real names
+ * come as "Astrit H. Hajdari, MD" (comma before the credential) and
+ * multiple providers are joined with ";" — e.g. "Erik C. Schumann, PA-C;
+ * William L. Ferber, MD". Splitting on comma too would cut "MD" off as
+ * its own fake provider. Confirmed across all 5 hackathon sample files:
+ * "Primary Provider" always uses ";" between people, never a bare comma.
+ */
+function splitProviders(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(";")
     .map((v) => v.trim())
     .filter(Boolean);
 }
