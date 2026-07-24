@@ -1,4 +1,4 @@
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 import type { Case } from "@/types/event";
 
 /**
@@ -34,29 +34,61 @@ function getClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
+/** Each line is prefixed with the event's id so the model can cite it back. */
 function eventsAsContext(medicalCase: Case): string {
   return medicalCase.events
     .map((e) => {
       const date = Number.isNaN(e.date.getTime())
         ? "date unknown"
         : e.date.toISOString().slice(0, 10);
-      return `${date} — ${e.recordType}: ${e.summary}`;
+      return `${e.id} | ${date} — ${e.recordType}: ${e.summary}`;
     })
     .join("\n");
 }
 
-/** Q&A about the case: "when was the first MRI?", "how many PT sessions?" */
+export interface CaseAnswer {
+  answer: string;
+  /** Event ids the answer is grounded in, so the UI can link back to them. */
+  citedEventIds: string[];
+}
+
+/**
+ * Q&A about the case: "when was the first MRI?", "how many PT sessions?"
+ * Structured output (not free text) so the UI can turn "cited" events
+ * into clickable jumps back to the timeline — verified with a real API
+ * key (Jul 24 2026) that gemini-3.6-flash reliably returns the right
+ * event id(s) for a grounded factual question.
+ */
 export async function askCaseQuestion(
   medicalCase: Case,
   question: string
-): Promise<string> {
+): Promise<CaseAnswer> {
   const ai = getClient();
   const response = await ai.models.generateContent({
     model: MODEL,
-    contents: `Medical events for this case:\n${eventsAsContext(medicalCase)}\n\nQuestion: ${question}\nAnswer briefly and factually, in English, citing dates when relevant.`,
-    config: GENERATION_CONFIG,
+    contents: `Medical events for this case (each line starts with its event id):\n${eventsAsContext(medicalCase)}\n\nQuestion: ${question}\nAnswer briefly and factually, in English, citing dates when relevant. List the ids of every event your answer relies on in citedEventIds — omit it (empty array) if the question isn't about specific events.`,
+    config: {
+      ...GENERATION_CONFIG,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          answer: { type: Type.STRING },
+          citedEventIds: { type: Type.ARRAY, items: { type: Type.STRING } },
+        },
+        required: ["answer", "citedEventIds"],
+      },
+    },
   });
-  return response.text ?? "";
+  try {
+    const parsed = JSON.parse(response.text ?? "{}");
+    return {
+      answer: typeof parsed.answer === "string" ? parsed.answer : "",
+      citedEventIds: Array.isArray(parsed.citedEventIds) ? parsed.citedEventIds : [],
+    };
+  } catch {
+    return { answer: response.text ?? "", citedEventIds: [] };
+  }
 }
 
 /** Generates a summary of the full treatment. */

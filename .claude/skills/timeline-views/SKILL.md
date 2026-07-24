@@ -81,3 +81,13 @@ long as you keep going through those two components. The modal has no
 single day) and closes on Escape, backdrop click, or the × button — keep
 all three if you touch it. Day cells with no encounters are inert
 (`disabled`) on purpose — there's nothing to show, so clicking does nothing.
+
+## The `month-{year}-{monthIndex}` anchors have a second consumer
+
+`GroupSection`'s `anchorId={`month-${group.key}`}` (only set for the
+chronological `"month"` grouping) isn't just for the density sparkline's
+click-to-jump — `CaseAssistant.tsx` (`lib/ai.ts`'s `askCaseQuestion`
+returns `citedEventIds`) links AI answer citations to the same anchors, computed
+independently from an event's date via the identical `month-${year}-${month}`
+format. If that key format changes, both places need updating — there's no
+shared helper between them, just the same formula duplicated on each side.
