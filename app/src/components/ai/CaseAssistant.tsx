@@ -5,6 +5,8 @@ import type { Case } from "@/types/event";
 
 interface CaseAssistantProps {
   medicalCase: Case;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
@@ -13,10 +15,14 @@ interface CaseAssistantProps {
  * events) without pushing the main content around or competing with it
  * for attention. `position: fixed` means this renders on top of
  * everything else regardless of where it sits in the component tree.
+ *
+ * `open` is controlled by the parent (`page.tsx`) rather than local
+ * state, because the page shifts the main content left while the panel
+ * is open (see `page.tsx`) — that layout decision needs to know whether
+ * the panel is open too, so there's one source of truth instead of two
+ * states that could drift out of sync.
  */
-export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
-  const [open, setOpen] = useState(false);
-
+export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistantProps) {
   return (
     <>
       {open && (
@@ -29,7 +35,7 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
             <h3 className="font-display text-sm italic text-foreground">AI assistant</h3>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
               aria-label="Close AI assistant"
               className="text-ink-muted hover:text-foreground"
             >
@@ -44,7 +50,7 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
 
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => onOpenChange(!open)}
         aria-expanded={open}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
         className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-2xl text-background shadow-lg transition hover:opacity-90 sm:bottom-6 sm:right-6"
@@ -55,7 +61,7 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
   );
 }
 
-function AssistantPanel({ medicalCase }: CaseAssistantProps) {
+function AssistantPanel({ medicalCase }: { medicalCase: Case }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
