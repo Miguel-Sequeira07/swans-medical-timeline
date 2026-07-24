@@ -51,6 +51,9 @@ your AI assistant at the start of the day.
       to the case)
 - [x] Local persistence — save/load previous timelines (`localStorage`, `useSyncExternalStore`)
 - [x] Approximate cost per case, measured with real data — [`docs/custo-por-caso.md`](./docs/custo-por-caso.md)
+- [x] AI assistant turned into a floating chat widget (fixed button, bottom-right, toggles a panel)
+      instead of an inline block at the bottom of the page — was getting buried under long timelines
+      and pushing content around
 
 ## 3. Person B — Timeline & UX
 

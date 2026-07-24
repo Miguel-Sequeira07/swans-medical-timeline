@@ -5,9 +5,63 @@ import type { Case } from "@/types/event";
 
 interface CaseAssistantProps {
   medicalCase: Case;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
+/**
+ * Floating chat widget, not an inline block at the bottom of the page —
+ * it stays reachable while scrolling a long timeline (Garrison has 820
+ * events) without pushing the main content around or competing with it
+ * for attention. `position: fixed` means this renders on top of
+ * everything else regardless of where it sits in the component tree.
+ *
+ * `open` is controlled by the parent (`page.tsx`) rather than local
+ * state, because the page shifts the main content left while the panel
+ * is open (see `page.tsx`) — that layout decision needs to know whether
+ * the panel is open too, so there's one source of truth instead of two
+ * states that could drift out of sync.
+ */
+export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistantProps) {
+  return (
+    <>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="AI assistant"
+          className="fixed bottom-24 right-4 z-50 flex max-h-[70vh] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-xl border border-paper-line bg-background shadow-xl sm:bottom-28 sm:right-6"
+        >
+          <div className="flex items-center justify-between border-b border-paper-line px-4 py-3">
+            <h3 className="font-display text-sm italic text-foreground">AI assistant</h3>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Close AI assistant"
+              className="text-ink-muted hover:text-foreground"
+            >
+              &#10005;
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <AssistantPanel medicalCase={medicalCase} />
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        aria-expanded={open}
+        aria-label={open ? "Close AI assistant" : "Open AI assistant"}
+        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-2xl text-background shadow-lg transition hover:opacity-90 sm:bottom-6 sm:right-6"
+      >
+        {open ? <>&#10005;</> : <>&#128172;</>}
+      </button>
+    </>
+  );
+}
+
+function AssistantPanel({ medicalCase }: { medicalCase: Case }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
@@ -58,21 +112,19 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-paper-line bg-paper/60 p-4">
-      <h3 className="font-display text-sm italic text-foreground">AI assistant</h3>
-
-      <form onSubmit={handleAsk} className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-4">
+      <form onSubmit={handleAsk} className="flex flex-col gap-2">
         <input
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="e.g. when was the first MRI?"
-          className="min-w-64 flex-1 rounded border border-paper-line bg-paper px-3 py-1.5 text-sm text-foreground"
+          className="w-full rounded border border-paper-line bg-paper px-3 py-1.5 text-sm text-foreground"
         />
         <button
           type="submit"
           disabled={loadingQa}
-          className="rounded-full bg-foreground px-4 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-50"
+          className="self-start rounded-full bg-foreground px-4 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-50"
         >
           {loadingQa ? "Thinking..." : "Ask"}
         </button>
@@ -81,7 +133,7 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
         <p className="rounded bg-paper border border-paper-line p-3 text-sm text-foreground">{answer}</p>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 border-t border-paper-line pt-3">
         <button
           type="button"
           onClick={handleSummarize}

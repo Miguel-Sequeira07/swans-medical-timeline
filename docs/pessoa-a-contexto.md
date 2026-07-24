@@ -5,6 +5,19 @@ start of the day, or ask it to read this file. General project context
 in [`../CLAUDE.md`](../CLAUDE.md) and [`../README.md`](../README.md) —
 read those first if you haven't.
 
+## Status (updated 24 Jul, afternoon)
+
+The Person A backlog below is done — floor, milestones, AI (Q&A/summary/
+rephrase), persistence, cost estimate. Latest UI change: the AI assistant
+(`CaseAssistant.tsx`) is no longer an inline block at the bottom of the
+page — it's a **floating chat widget**: a fixed circular button
+(bottom-right, 💬/✕ icon) that toggles a small chat panel above it. Both
+use `position: fixed`, so it stays reachable while scrolling a long
+timeline (Garrison: 820 events) without pushing the timeline content
+around or competing with it for space. `AssistantPanel` inside the same
+file has the actual Q&A/summary logic, unchanged from before — only the
+outer shell changed.
+
 ## Your slice of the product
 
 Everything that gets data into the system, and everything that uses AI.
