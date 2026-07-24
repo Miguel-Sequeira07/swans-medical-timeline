@@ -32,21 +32,24 @@ assistente de AI no início do dia.
 
 ## 1. Floor — bloqueia tudo o resto, fazer primeiro
 
-- [ ] **Pessoa A** — upload de Excel na UI → `parseExcelFile()` → estado da app
-- [ ] **Pessoa A** — testado com o Excel de amostra real (não só dados inventados)
+- [x] **Pessoa A** — upload de Excel na UI → `parseExcelFile()` → estado da app
+- [x] **Pessoa A** — testado com os 5 Excel de amostra reais (não só dados inventados)
 - [ ] **Pessoa B** — `Timeline.tsx` a renderizar a lista de eventos recebida (ainda pode ser visual simples)
 - [ ] **Ambos** — fluxo ponta-a-ponta a funcionar: upload → parse → timeline visível, sem hardcode dos dados de amostra
+      (falta só a Pessoa B ligar a timeline real — o resto já está feito e em `master`)
 - [ ] Primeiro deploy no Vercel feito (mesmo que feio) — deploy cedo, iterar em produção
 
 ## 2. Pessoa A — Dados & AI
 
-- [ ] Validação/erro claro quando o Excel não segue o formato esperado
-- [ ] Modelo + UI para adicionar a **data do acidente** / milestones manuais (não vem do Excel)
-- [ ] AI Q&A sobre o caso (`askCaseQuestion` já existe em `lib/ai.ts` — ligar à UI)
-- [ ] AI: resumo do tratamento completo (`summarizeTreatment` — ligar à UI)
-- [ ] AI: reescrever/editar um summary (manual ou com AI)
-- [ ] Persistência local — guardar/carregar timelines anteriores (`localStorage`)
-- [ ] Calcular custo aproximado por caso (tokens Gemini × preço) — precisa para a submissão
+- [x] Validação/erro claro quando o Excel não segue o formato esperado
+- [x] Modelo + UI para adicionar a **data do acidente** / milestones manuais (não vem do Excel)
+- [x] AI Q&A sobre o caso (`askCaseQuestion` em `lib/ai.ts`, ligado via `/api/case-qa` e `CaseAssistant.tsx`)
+- [x] AI: resumo do tratamento completo (`summarizeTreatment`, ligado via `/api/case-summary`)
+- [x] AI: `rephraseSummary` existe e tem rota (`/api/rephrase-summary`), **mas sem botão na UI ainda** —
+      faz mais sentido por evento dentro da `Timeline.tsx`, por isso fica para a Pessoa B ligar (ou quem
+      tiver tempo) em vez de duplicar UI fora da timeline
+- [x] Persistência local — guardar/carregar timelines anteriores (`localStorage`, `useSyncExternalStore`)
+- [x] Custo aproximado por caso, medido com dados reais — [`docs/custo-por-caso.md`](./docs/custo-por-caso.md)
 
 ## 3. Pessoa B — Timeline & UX
 
