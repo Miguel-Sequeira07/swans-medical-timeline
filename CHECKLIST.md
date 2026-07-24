@@ -14,6 +14,22 @@ assistente de AI no início do dia.
 - [ ] Excel de amostra do hackathon (QR "Slides & Excel files") descarregado e guardado localmente para testes
 - [ ] Confirmar rápido: schema em `app/src/types/event.ts` serve para os dois — se precisar de mudar, avisar o outro antes de mexer
 
+## Descobertas ao validar com dados reais (5 Excel em `sample-data/`)
+
+- [x] **Bug corrigido:** `Link To Pdf` não é texto com o URL — é a palavra
+  "pdf" com um **hyperlink** por baixo da célula. `parse-excel.ts` já lê o
+  hyperlink real (`cell.l.Target`), não o texto visível.
+- **Linhas sem data existem de verdade** (ex.: "Administrative Record" sem
+  `Encounter Date`, 7 casos no ficheiro Caldwell). O parser devolve
+  `Date(NaN)` para essas — a timeline (Pessoa B) tem de as mostrar sem
+  rebentar (ex. secção "sem data"), não assumir que toda a linha tem data.
+- **Escala varia muito**: 49 a 820 eventos por caso nos 5 ficheiros de
+  amostra. Testar a timeline com o Garrison (820 linhas) para performance/
+  legibilidade, não só com casos pequenos.
+- 2 dos 5 ficheiros (`Middleswarth`, `Rogers`) têm links reais para PDFs
+  que existem em `sample-data/Medical Records/` — bons para testar
+  "clicar num evento → abrir PDF fonte" de ponta a ponta.
+
 ## 1. Floor — bloqueia tudo o resto, fazer primeiro
 
 - [ ] **Pessoa A** — upload de Excel na UI → `parseExcelFile()` → estado da app
