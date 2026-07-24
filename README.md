@@ -118,7 +118,7 @@ para branches longas hoje.
 ## Estado do projeto (atualizar ao longo do dia)
 
 **Já feito:**
-- Repo criado e no GitHub: https://github.com/Miguel-Sequeira07/swans-medical-timeline-hackathon
+- Repo criado e no GitHub: https://github.com/Miguel-Sequeira07/swans-medical-timeline (público)
 - Scaffold Next.js + TypeScript + Tailwind, a compilar sem erros (`npx tsc --noEmit`)
 - Dependências instaladas: `xlsx`, `@google/generative-ai`, `jspdf`, `pptxgenjs`
 - Schema partilhado em `src/types/event.ts` (`MedicalEvent`, `Milestone`, `Case`)
