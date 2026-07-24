@@ -38,7 +38,7 @@ your AI assistant at the start of the day.
 - [x] **Person A** — tested with the 5 real sample Excel files (not just made-up data)
 - [x] **Person B** — `Timeline.tsx` rendering the received event list (real visual timeline, not a plain list)
 - [x] **Both** — end-to-end flow working: upload → parse → timeline visible, no hardcoding of sample data
-- [ ] First Vercel deploy done (even if ugly) — deploy early, iterate in production
+- [x] First Vercel deploy done — live at https://swans-medical-timeline.vercel.app
 
 ## 2. Person A — Data & AI
 
@@ -46,9 +46,7 @@ your AI assistant at the start of the day.
 - [x] Model + UI to add the **accident date** / manual milestones (not in the Excel)
 - [x] AI Q&A about the case (`askCaseQuestion` in `lib/ai.ts`, wired via `/api/case-qa` and `CaseAssistant.tsx`)
 - [x] AI: full treatment summary (`summarizeTreatment`, wired via `/api/case-summary`)
-- [x] AI: `rephraseSummary` exists and has a route (`/api/rephrase-summary`), **but no UI button yet** —
-      makes more sense per-event inside `Timeline.tsx`, so it's left for Person B to wire (or whoever
-      has time) instead of duplicating UI outside the timeline
+- [x] AI: `rephraseSummary` wired to a per-event "Rephrase in plain English" button inside `Timeline.tsx`'s `EventCard`
 - [x] Local persistence — save/load previous timelines (`localStorage`, `useSyncExternalStore`)
 - [x] Approximate cost per case, measured with real data — [`docs/custo-por-caso.md`](./docs/custo-por-caso.md)
 
@@ -66,14 +64,23 @@ your AI assistant at the start of the day.
 
 ## 4. Continuous integration (both, all day)
 
+- [x] GitHub repo connected to Vercel (Root Directory = `app`), pushes auto-deploy
 - [ ] Small commits, frequent pushes to `master`
 - [ ] No long-lived branches — merge as soon as a feature works
-- [ ] Redeploy on Vercel at every important milestone
 - [ ] Test the app with an Excel **different** from the sample before calling any feature done (golden rule of the challenge)
+
+**Vercel gotcha:** it dedupes deployments by commit SHA. If you push the same
+commit to two branches (e.g. merge a feature branch into `master` as a
+fast-forward and push both), only the branch whose push arrives first gets
+built — the other doesn't trigger a fresh deploy, so production can go stale
+silently. After merging into `master`, don't assume it auto-deployed —
+confirm with `vercel ls swans-medical-timeline` that the newest "Ready" row
+is tagged `Production` with the right age, and if not, force one from the
+repo root: `vercel deploy --prod --force --yes`.
 
 ## 5. Before submitting (5:00 PM)
 
-- [ ] **Deployed** app link, not localhost
+- [x] **Deployed** app link, not localhost — https://swans-medical-timeline.vercel.app
 - [ ] List of assumptions (e.g. "assumes a Gemini API key")
 - [ ] Note on where the data lives (client-side / localStorage is a valid answer)
 - [x] Approximate cost per case processed — real numbers measured in
