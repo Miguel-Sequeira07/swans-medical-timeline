@@ -3,6 +3,24 @@
 import { useState, type FormEvent } from "react";
 import type { Case } from "@/types/event";
 
+const citationDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+/**
+ * Same key format as `buildMonthGroups`/`GroupSection` in
+ * `Timeline.tsx` (`${year}-${month}` → `id="month-${key}"`). Reused
+ * here instead of duplicated so a citation jumps to the right section.
+ * Only resolves while the timeline is grouped chronologically by month
+ * (the default view) — in calendar or category-grouped view the anchor
+ * won't exist and the link is a harmless no-op.
+ */
+function monthAnchor(date: Date): string {
+  return `month-${date.getFullYear()}-${date.getMonth()}`;
+}
+
 interface CaseAssistantProps {
   medicalCase: Case;
   open: boolean;
@@ -99,6 +117,7 @@ export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistant
 function AssistantPanel({ medicalCase }: { medicalCase: Case }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
+  const [citedEventIds, setCitedEventIds] = useState<string[]>([]);
   const [summary, setSummary] = useState<string | null>(null);
   const [loadingQa, setLoadingQa] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -110,6 +129,7 @@ function AssistantPanel({ medicalCase }: { medicalCase: Case }) {
     setError(null);
     setLoadingQa(true);
     setAnswer(null);
+    setCitedEventIds([]);
     try {
       const res = await fetch("/api/case-qa", {
         method: "POST",
@@ -119,6 +139,7 @@ function AssistantPanel({ medicalCase }: { medicalCase: Case }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unknown error");
       setAnswer(data.answer);
+      setCitedEventIds(Array.isArray(data.citedEventIds) ? data.citedEventIds : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't get an answer.");
     } finally {
@@ -165,7 +186,26 @@ function AssistantPanel({ medicalCase }: { medicalCase: Case }) {
         </button>
       </form>
       {answer && (
-        <p className="rounded bg-paper border border-paper-line p-3 text-sm text-foreground">{answer}</p>
+        <div className="flex flex-col gap-2">
+          <p className="rounded bg-paper border border-paper-line p-3 text-sm text-foreground">{answer}</p>
+          {citedEventIds.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {citedEventIds.map((id) => {
+                const event = medicalCase.events.find((e) => e.id === id);
+                if (!event || Number.isNaN(event.date.getTime())) return null;
+                return (
+                  <a
+                    key={id}
+                    href={`#${monthAnchor(event.date)}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-paper-line bg-paper px-2.5 py-1 text-[11px] font-medium text-ink-muted transition hover:border-foreground/40 hover:text-foreground"
+                  >
+                    &#8599; {citationDateFormatter.format(event.date)} &middot; {event.recordType || "Record"}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       <div className="flex items-center gap-3 border-t border-paper-line pt-3">
