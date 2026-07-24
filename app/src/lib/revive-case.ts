@@ -1,9 +1,10 @@
 import type { Case } from "@/types/event";
 
 /**
- * `Case` cruza a rede como JSON (fetch do cliente para a rota de API) e as
- * `Date` viram strings ISO nesse percurso. Repõe os tipos antes de usar
- * as funções de `lib/ai.ts`, que assumem `Date` de verdade.
+ * `Case` passa por JSON.stringify/parse em dois sítios — fetch do cliente
+ * para as rotas de API, e leitura do `localStorage` (`lib/storage.ts`) —
+ * e as `Date` viram strings ISO nesse percurso. Repõe os tipos a partir
+ * daí, para quem consome o `Case` (ex. `lib/ai.ts`) não ter de saber disto.
  */
 export function reviveCase(input: unknown): Case {
   const raw = input as {

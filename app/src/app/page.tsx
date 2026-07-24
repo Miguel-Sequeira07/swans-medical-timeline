@@ -5,14 +5,24 @@ import { ExcelUploader } from "@/components/upload/ExcelUploader";
 import { Timeline } from "@/components/timeline/Timeline";
 import { MilestoneForm } from "@/components/milestones/MilestoneForm";
 import { CaseAssistant } from "@/components/ai/CaseAssistant";
+import { PreviousCases } from "@/components/cases/PreviousCases";
+import { useCases } from "@/hooks/use-cases";
+import { deleteCase, saveCase } from "@/lib/storage";
 import type { Case, MedicalEvent, Milestone } from "@/types/event";
 
 export default function Home() {
   const [medicalCase, setMedicalCase] = useState<Case | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const previousCases = useCases();
+
+  function persist(next: Case) {
+    setSaveFailed(!saveCase(next));
+    setMedicalCase(next);
+  }
 
   function handleParsed(events: MedicalEvent[], fileName: string) {
     const now = new Date();
-    setMedicalCase({
+    persist({
       id: crypto.randomUUID(),
       name: fileName.replace(/\.xlsx?$/i, ""),
       events,
@@ -23,27 +33,26 @@ export default function Home() {
   }
 
   function addMilestone(milestone: Milestone) {
-    setMedicalCase((current) =>
-      current
-        ? {
-            ...current,
-            milestones: [...current.milestones, milestone],
-            updatedAt: new Date(),
-          }
-        : current
-    );
+    if (!medicalCase) return;
+    persist({
+      ...medicalCase,
+      milestones: [...medicalCase.milestones, milestone],
+      updatedAt: new Date(),
+    });
   }
 
   function removeMilestone(id: string) {
-    setMedicalCase((current) =>
-      current
-        ? {
-            ...current,
-            milestones: current.milestones.filter((m) => m.id !== id),
-            updatedAt: new Date(),
-          }
-        : current
-    );
+    if (!medicalCase) return;
+    persist({
+      ...medicalCase,
+      milestones: medicalCase.milestones.filter((m) => m.id !== id),
+      updatedAt: new Date(),
+    });
+  }
+
+  function handleDeleteCase(id: string) {
+    deleteCase(id);
+    if (medicalCase?.id === id) setMedicalCase(null);
   }
 
   return (
@@ -56,7 +65,14 @@ export default function Home() {
       </header>
 
       {!medicalCase ? (
-        <ExcelUploader onParsed={handleParsed} />
+        <div className="flex flex-col gap-8">
+          <ExcelUploader onParsed={handleParsed} />
+          <PreviousCases
+            cases={previousCases}
+            onOpen={setMedicalCase}
+            onDelete={handleDeleteCase}
+          />
+        </div>
       ) : (
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
@@ -74,6 +90,13 @@ export default function Home() {
               Carregar outro ficheiro
             </button>
           </div>
+          {saveFailed && (
+            <p className="text-xs text-amber-600">
+              Não foi possível guardar este caso neste browser (armazenamento
+              cheio). A timeline funciona na mesma, só não fica disponível
+              depois de recarregar a página.
+            </p>
+          )}
           <MilestoneForm
             milestones={medicalCase.milestones}
             onAdd={addMilestone}
