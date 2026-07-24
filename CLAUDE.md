@@ -47,8 +47,20 @@ em dados.
 ## Stack
 
 Next.js + React + TypeScript (`app/`), Tailwind CSS, `xlsx` para parsing,
-`@google/generative-ai` (Gemini) para AI, `jspdf`/`pptxgenjs` para export,
-`localStorage` para persistência client-side. Deploy no Vercel.
+`@google/genai` (Gemini, modelo `gemini-3.6-flash` — **não** o pacote
+`@google/generative-ai`, descontinuado, nem `gemini-2.0-flash`, desligado
+a 1 jun 2026) para AI, `jspdf`/`pptxgenjs` para export, `localStorage`
+para persistência client-side. Deploy no Vercel.
+
+## Idioma: tudo o que o utilizador vê é em inglês
+
+Os utilizadores reais são advogados/júris nos EUA, e os juízes do
+hackathon usam a app diretamente — confirmado a testar com uma API key
+real que um prompt em português faz o Gemini responder em português, o
+que seria inutilizável. Regra: **UI, mensagens de erro, e prompts/output
+de AI em inglês, sempre.** Comentários de código, commits e documentação
+interna (este ficheiro, README, CHECKLIST, docs/) continuam em português
+— é só o que o utilizador final vê que muda.
 
 ## Quem faz o quê
 
