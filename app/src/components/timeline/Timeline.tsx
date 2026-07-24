@@ -1,24 +1,29 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Case, MedicalEvent, Milestone } from "@/types/event";
+import {
+  buildCategoryGroups,
+  buildMonthGroups,
+  caseFilterOptions,
+  createEmptyFilters,
+  dateRangeOf,
+  filterEvents,
+  hasActiveFilters,
+  isValidDate,
+  splitByDateValidity,
+  type GroupBy,
+  type TimelineEntry,
+  type TimelineFilters,
+} from "@/lib/timeline";
+import { FilterBar } from "./FilterBar";
 
 /**
  * Componente central da timeline (Pessoa B). Recebe um `Case` já parseado
  * (ver src/types/event.ts) e não assume nada sobre o conteúdo dos dados —
- * só a forma do schema é garantida (regra de ouro do desafio).
+ * só a forma do schema é garantida (regra de ouro do desafio). Filtragem e
+ * agrupamento vivem em `lib/timeline.ts`; este ficheiro só renderiza.
  */
-
-type TimelineEntry =
-  | { kind: "event"; date: Date; event: MedicalEvent }
-  | { kind: "milestone"; date: Date; milestone: Milestone };
-
-interface MonthGroup {
-  key: string;
-  date: Date;
-  entries: TimelineEntry[];
-  eventCount: number;
-}
 
 const ACCENTS = [
   { dot: "bg-accent-rust", text: "text-accent-rust", bg: "bg-accent-rust/10" },
@@ -44,88 +49,134 @@ function accentFor(key: string): Accent {
   return ACCENTS[hashString(safeKey) % ACCENTS.length];
 }
 
-function isValidDate(date: Date): boolean {
-  return date instanceof Date && !Number.isNaN(date.getTime());
-}
-
-const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
 const dayNumberFormatter = new Intl.DateTimeFormat("en-US", { day: "numeric" });
 const weekdayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const rangeFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-function buildTimeline(medicalCase: Case) {
-  const validEvents = medicalCase.events.filter((event) => isValidDate(event.date));
-  const undated = medicalCase.events.filter((event) => !isValidDate(event.date));
-
-  const entries: TimelineEntry[] = [
-    ...validEvents.map((event) => ({ kind: "event" as const, date: event.date, event })),
-    ...medicalCase.milestones
-      .filter((milestone) => isValidDate(milestone.date))
-      .map((milestone) => ({ kind: "milestone" as const, date: milestone.date, milestone })),
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  const groups: MonthGroup[] = [];
-  const groupIndex = new Map<string, MonthGroup>();
-
-  for (const entry of entries) {
-    const key = `${entry.date.getFullYear()}-${entry.date.getMonth()}`;
-    let group = groupIndex.get(key);
-    if (!group) {
-      group = { key, date: entry.date, entries: [], eventCount: 0 };
-      groupIndex.set(key, group);
-      groups.push(group);
-    }
-    group.entries.push(entry);
-    if (entry.kind === "event") group.eventCount += 1;
-  }
-
-  const range =
-    validEvents.length > 0
-      ? validEvents.reduce(
-          (acc, event) => ({
-            start: event.date < acc.start ? event.date : acc.start,
-            end: event.date > acc.end ? event.date : acc.end,
-          }),
-          { start: validEvents[0].date, end: validEvents[0].date }
-        )
-      : null;
-
-  return { groups, undated, range, totalEvents: validEvents.length };
-}
-
 export function Timeline({ case: medicalCase }: { case: Case }) {
-  const { groups, undated, range, totalEvents } = useMemo(
-    () => buildTimeline(medicalCase),
+  const [filters, setFilters] = useState<TimelineFilters>(createEmptyFilters);
+  const [groupBy, setGroupBy] = useState<GroupBy>("month");
+
+  const options = useMemo(() => caseFilterOptions(medicalCase), [medicalCase]);
+  const filtered = useMemo(
+    () => filterEvents(medicalCase.events, filters),
+    [medicalCase, filters]
+  );
+  const { dated, undated } = useMemo(() => splitByDateValidity(filtered), [filtered]);
+
+  const allDated = useMemo(
+    () => medicalCase.events.filter((event) => isValidDate(event.date)),
+    [medicalCase]
+  );
+  const fullRange = useMemo(() => dateRangeOf(allDated), [allDated]);
+  const totalUndated = medicalCase.events.length - allDated.length;
+
+  const sortedMilestones = useMemo(
+    () =>
+      [...medicalCase.milestones]
+        .filter((milestone) => isValidDate(milestone.date))
+        .sort((a, b) => a.date.getTime() - b.date.getTime()),
     [medicalCase]
   );
 
-  const rangeLabel = range
-    ? `${rangeFormatter.format(range.start)} – ${rangeFormatter.format(range.end)}`
+  const monthGroups = useMemo(
+    () => (groupBy === "month" ? buildMonthGroups(dated, medicalCase.milestones) : []),
+    [groupBy, dated, medicalCase]
+  );
+  const categoryGroups = useMemo(
+    () =>
+      groupBy !== "month"
+        ? buildCategoryGroups(dated, groupBy as Exclude<GroupBy, "month">)
+        : [],
+    [groupBy, dated]
+  );
+
+  const rangeLabel = fullRange
+    ? `${rangeFormatter.format(fullRange.start)} – ${rangeFormatter.format(fullRange.end)}`
     : null;
+
+  const isFiltered = hasActiveFilters(filters);
+  const noResults = filtered.length === 0 && medicalCase.events.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-      <header className="mb-8 border-b border-paper-line pb-6">
+      <header className="mb-6 border-b border-paper-line pb-6">
         <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Medical Timeline</p>
         <h1 className="mt-1 font-display text-3xl italic text-foreground sm:text-4xl">
           {medicalCase.name}
         </h1>
         {rangeLabel && (
           <p className="mt-3 text-sm text-ink-muted">
-            {rangeLabel} &middot; {totalEvents} medical{" "}
-            {totalEvents === 1 ? "encounter" : "encounters"}
-            {undated.length > 0 && ` · ${undated.length} undated`}
+            {rangeLabel} &middot; {allDated.length} medical{" "}
+            {allDated.length === 1 ? "encounter" : "encounters"}
+            {totalUndated > 0 && ` · ${totalUndated} undated`}
+            {isFiltered && ` · ${filtered.length} match current filters`}
           </p>
         )}
       </header>
 
-      {groups.length === 0 ? (
+      {sortedMilestones.length > 0 && (
+        <div className="mb-6">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-ink-muted">
+            Key dates
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {sortedMilestones.map((milestone) => (
+              <span
+                key={milestone.id}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
+                  milestone.type === "accident"
+                    ? "border-accent-rust/40 bg-accent-rust/10 text-accent-rust"
+                    : "border-accent-ochre/40 bg-accent-ochre/10 text-accent-ochre"
+                }`}
+              >
+                {milestone.type === "accident" ? "⚑" : "◆"} {milestone.label} &middot;{" "}
+                {rangeFormatter.format(milestone.date)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {medicalCase.events.length > 0 && (
+        <FilterBar
+          options={options}
+          filters={filters}
+          groupBy={groupBy}
+          isFiltered={isFiltered}
+          onFiltersChange={setFilters}
+          onGroupByChange={setGroupBy}
+          onClear={() => setFilters(createEmptyFilters())}
+        />
+      )}
+
+      {medicalCase.events.length === 0 ? (
         <EmptyState />
+      ) : noResults ? (
+        <NoResultsState onClear={() => setFilters(createEmptyFilters())} />
       ) : (
         <div className="space-y-8">
-          {groups.map((group) => (
-            <MonthSection key={group.key} group={group} />
-          ))}
+          {groupBy === "month"
+            ? monthGroups.map((group) => (
+                <GroupSection
+                  key={group.key}
+                  label={group.label}
+                  eventCount={group.eventCount}
+                  entries={group.entries}
+                />
+              ))
+            : categoryGroups.map((group) => (
+                <GroupSection
+                  key={group.key}
+                  label={group.label}
+                  eventCount={group.events.length}
+                  entries={group.events.map((event) => ({
+                    kind: "event" as const,
+                    date: event.date,
+                    event,
+                  }))}
+                />
+              ))}
         </div>
       )}
 
@@ -134,15 +185,21 @@ export function Timeline({ case: medicalCase }: { case: Case }) {
   );
 }
 
-function MonthSection({ group }: { group: MonthGroup }) {
+function GroupSection({
+  label,
+  eventCount,
+  entries,
+}: {
+  label: string;
+  eventCount: number;
+  entries: TimelineEntry[];
+}) {
   return (
     <section>
       <div className="sticky top-0 z-10 -mx-4 mb-1 flex items-baseline justify-between border-b border-paper-line bg-background/95 px-4 py-2 backdrop-blur-sm sm:-mx-6 sm:px-6">
-        <h2 className="font-display text-lg italic text-foreground sm:text-xl">
-          {monthFormatter.format(group.date)}
-        </h2>
+        <h2 className="font-display text-lg italic text-foreground sm:text-xl">{label}</h2>
         <span className="text-xs uppercase tracking-wider text-ink-muted">
-          {group.eventCount} {group.eventCount === 1 ? "encounter" : "encounters"}
+          {eventCount} {eventCount === 1 ? "encounter" : "encounters"}
         </span>
       </div>
       <ol className="relative">
@@ -150,7 +207,7 @@ function MonthSection({ group }: { group: MonthGroup }) {
           aria-hidden
           className="pointer-events-none absolute bottom-0 left-20 top-0 w-px bg-paper-line"
         />
-        {group.entries.map((entry) =>
+        {entries.map((entry) =>
           entry.kind === "milestone" ? (
             <MilestoneRow key={`m-${entry.milestone.id}`} milestone={entry.milestone} />
           ) : (
@@ -318,6 +375,21 @@ function EmptyState() {
     <div className="rounded-lg border border-dashed border-paper-line py-16 text-center">
       <p className="font-display text-xl italic text-foreground">No medical events yet</p>
       <p className="mt-2 text-sm text-ink-muted">Upload a case Excel file to build the timeline.</p>
+    </div>
+  );
+}
+
+function NoResultsState({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="rounded-lg border border-dashed border-paper-line py-16 text-center">
+      <p className="font-display text-xl italic text-foreground">No encounters match your filters</p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="mt-3 text-sm font-medium text-accent-rust hover:underline"
+      >
+        Clear filters
+      </button>
     </div>
   );
 }
