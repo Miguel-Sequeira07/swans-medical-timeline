@@ -245,6 +245,31 @@ function EventRow({ event }: { event: MedicalEvent }) {
 
 function EventCard({ event, accent }: { event: MedicalEvent; accent: Accent }) {
   const hasPdf = Boolean(event.pdfUrl);
+  const [rephrased, setRephrased] = useState<string | null>(null);
+  const [rephrasing, setRephrasing] = useState(false);
+  const [rephraseError, setRephraseError] = useState<string | null>(null);
+
+  async function handleRephrase(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!event.summary || rephrasing) return;
+    setRephrasing(true);
+    setRephraseError(null);
+    try {
+      const res = await fetch("/api/rephrase-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ summary: event.summary }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Unknown error");
+      setRephrased(data.rephrased);
+    } catch (err) {
+      setRephraseError(err instanceof Error ? err.message : "Couldn't rephrase this summary.");
+    } finally {
+      setRephrasing(false);
+    }
+  }
 
   const inner = (
     <>
@@ -269,7 +294,15 @@ function EventCard({ event, accent }: { event: MedicalEvent; accent: Accent }) {
       </p>
 
       {event.summary && (
-        <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">{event.summary}</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
+          {rephrased ?? event.summary}
+        </p>
+      )}
+
+      {rephraseError && (
+        <p className="mt-1.5 text-xs text-accent-rust" role="alert">
+          {rephraseError}
+        </p>
       )}
 
       {event.bodyParts.length > 0 && (
@@ -285,26 +318,36 @@ function EventCard({ event, accent }: { event: MedicalEvent; accent: Accent }) {
         </div>
       )}
 
-      {hasPdf && (
-        <p className="mt-2.5 text-xs font-medium text-accent-slate group-hover:underline">
-          View source document &#8599;
-        </p>
-      )}
+      <div className="mt-2.5 flex flex-wrap items-center gap-3">
+        {hasPdf && (
+          <a
+            href={event.pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-accent-slate hover:underline"
+          >
+            View source document &#8599;
+          </a>
+        )}
+        {event.summary && (
+          <button
+            type="button"
+            onClick={handleRephrase}
+            disabled={rephrasing}
+            className="text-xs font-medium text-ink-muted underline hover:text-foreground disabled:opacity-50"
+          >
+            {rephrasing ? "Rephrasing…" : rephrased ? "Rephrase again" : "Rephrase in plain English"}
+          </button>
+        )}
+      </div>
     </>
   );
 
-  const className =
-    "group block rounded-lg border border-paper-line bg-paper px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md";
-
-  if (hasPdf) {
-    return (
-      <a href={event.pdfUrl} target="_blank" rel="noopener noreferrer" className={className}>
-        {inner}
-      </a>
-    );
-  }
-
-  return <div className={className}>{inner}</div>;
+  return (
+    <div className="rounded-lg border border-paper-line bg-paper px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      {inner}
+    </div>
+  );
 }
 
 function MilestoneRow({ milestone }: { milestone: Milestone }) {

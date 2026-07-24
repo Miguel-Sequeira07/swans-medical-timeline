@@ -58,8 +58,8 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <h3 className="text-sm font-medium">AI assistant</h3>
+    <div className="flex flex-col gap-4 rounded-lg border border-paper-line bg-paper/60 p-4">
+      <h3 className="font-display text-sm italic text-foreground">AI assistant</h3>
 
       <form onSubmit={handleAsk} className="flex flex-wrap gap-2">
         <input
@@ -67,18 +67,18 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="e.g. when was the first MRI?"
-          className="min-w-64 flex-1 rounded border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-black"
+          className="min-w-64 flex-1 rounded border border-paper-line bg-paper px-3 py-1.5 text-sm text-foreground"
         />
         <button
           type="submit"
           disabled={loadingQa}
-          className="rounded-full bg-black px-4 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          className="rounded-full bg-foreground px-4 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-50"
         >
           {loadingQa ? "Thinking..." : "Ask"}
         </button>
       </form>
       {answer && (
-        <p className="rounded bg-zinc-50 p-3 text-sm dark:bg-zinc-900">{answer}</p>
+        <p className="rounded bg-paper border border-paper-line p-3 text-sm text-foreground">{answer}</p>
       )}
 
       <div className="flex items-center gap-3">
@@ -86,17 +86,17 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
           type="button"
           onClick={handleSummarize}
           disabled={loadingSummary}
-          className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-medium disabled:opacity-50 dark:border-zinc-700"
+          className="rounded-full border border-paper-line px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-foreground/40 disabled:opacity-50"
         >
           {loadingSummary ? "Generating..." : "Generate treatment summary"}
         </button>
       </div>
       {summary && (
-        <p className="rounded bg-zinc-50 p-3 text-sm dark:bg-zinc-900">{summary}</p>
+        <p className="rounded bg-paper border border-paper-line p-3 text-sm text-foreground">{summary}</p>
       )}
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-accent-rust" role="alert">
           {error}
         </p>
       )}
