@@ -85,6 +85,10 @@ Alinhar o schema em `app/src/types/event.ts` (já criado como ponto de partida)
 e o formato do Excel de amostra. Depois de acordado, não mexer mais no schema
 sem avisar o outro.
 
+Contexto detalhado para cada um, pronto a colar num assistente de AI:
+[`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md) e
+[`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md).
+
 ### Pessoa A — Dados & AI
 - Upload + parsing do Excel (`lib/parse-excel.ts`), validação, tratamento de
   ficheiros fora do formato esperado

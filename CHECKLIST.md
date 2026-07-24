@@ -1,7 +1,10 @@
 # Checklist do dia — Medical Timeline
 
 Deadline de submissão: **17:00**. Marcar cada item à medida que se avança.
-Contexto completo em [`README.md`](./README.md).
+Contexto completo em [`README.md`](./README.md) e [`CLAUDE.md`](./CLAUDE.md).
+Contexto individual: [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md) ·
+[`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md) — cola no teu
+assistente de AI no início do dia.
 
 ## 0. Antes de codar (ambos, ~15 min)
 
