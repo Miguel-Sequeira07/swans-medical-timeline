@@ -9,6 +9,41 @@ interface CaseAssistantProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function ChatIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-6 w-6"
+      aria-hidden="true"
+    >
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+function CloseIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 /**
  * Floating chat widget, not an inline block at the bottom of the page —
  * it stays reachable while scrolling a long timeline (Garrison has 820
@@ -39,7 +74,7 @@ export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistant
               aria-label="Close AI assistant"
               className="text-ink-muted hover:text-foreground"
             >
-              &#10005;
+              <CloseIcon className="h-4 w-4" />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
@@ -53,9 +88,9 @@ export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistant
         onClick={() => onOpenChange(!open)}
         aria-expanded={open}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
-        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-2xl text-background shadow-lg transition hover:opacity-90 sm:bottom-6 sm:right-6"
+        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:opacity-90 sm:bottom-6 sm:right-6"
       >
-        {open ? <>&#10005;</> : <>&#128172;</>}
+        {open ? <CloseIcon /> : <ChatIcon />}
       </button>
     </>
   );
