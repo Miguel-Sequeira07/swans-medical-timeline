@@ -13,22 +13,22 @@ export function PreviousCases({ cases, onOpen, onDelete }: PreviousCasesProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium text-zinc-500">
+      <h3 className="font-display text-sm italic text-ink-muted">
         Timelines saved in this browser
       </h3>
       <ul className="flex flex-col gap-2">
         {cases.map((c) => (
           <li
             key={c.id}
-            className="flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-2 dark:border-zinc-800"
+            className="flex items-center justify-between rounded-lg border border-paper-line bg-paper/60 px-4 py-2"
           >
             <button
               type="button"
               onClick={() => onOpen(c)}
               className="flex-1 text-left"
             >
-              <span className="text-sm font-medium">{c.name}</span>
-              <span className="ml-2 text-xs text-zinc-500">
+              <span className="text-sm font-medium text-foreground">{c.name}</span>
+              <span className="ml-2 text-xs text-ink-muted">
                 {c.events.length} events · updated{" "}
                 {c.updatedAt.toLocaleDateString()}
               </span>
@@ -36,7 +36,7 @@ export function PreviousCases({ cases, onOpen, onDelete }: PreviousCasesProps) {
             <button
               type="button"
               onClick={() => onDelete(c.id)}
-              className="text-xs text-zinc-500 underline"
+              className="text-xs text-ink-muted underline hover:text-foreground"
             >
               delete
             </button>

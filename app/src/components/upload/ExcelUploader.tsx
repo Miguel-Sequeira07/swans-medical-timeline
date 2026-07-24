@@ -33,9 +33,9 @@ export function ExcelUploader({ onParsed }: ExcelUploaderProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border-2 border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
-      <p className="text-lg font-medium">Upload the case Excel</p>
-      <p className="max-w-md text-sm text-zinc-500">
+    <div className="flex flex-col items-center gap-4 rounded-xl border-2 border-dashed border-paper-line bg-paper/60 p-10 text-center">
+      <p className="font-display text-lg italic text-foreground">Upload the case Excel</p>
+      <p className="max-w-md text-sm text-ink-muted">
         One row per medical encounter. Expected columns: Encounter Date,
         Primary Provider, Facility, Body Parts, Medicine Type, Record Type,
         Summary, Link To Pdf.
@@ -55,12 +55,12 @@ export function ExcelUploader({ onParsed }: ExcelUploaderProps) {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={loading}
-        className="rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        className="rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
       >
         {loading ? "Processing..." : "Choose .xlsx file"}
       </button>
       {error && (
-        <p className="max-w-md text-sm text-red-600" role="alert">
+        <p className="max-w-md text-sm text-accent-rust" role="alert">
           {error}
         </p>
       )}
