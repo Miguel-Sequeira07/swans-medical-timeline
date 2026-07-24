@@ -42,3 +42,18 @@ export async function summarizeTreatment(medicalCase: Case): Promise<string> {
   );
   return result.response.text();
 }
+
+/** Reescreve o summary de um único evento, mais claro para leigos. */
+export async function rephraseSummary(
+  summary: string,
+  instruction?: string
+): Promise<string> {
+  const model = getModel();
+  const result = await model.generateContent(
+    `Reescreve este resumo médico de forma clara para um leigo (júri/cliente), ` +
+      `mantendo todos os factos clínicos, sem inventar informação nova.` +
+      (instruction ? ` Instrução adicional: ${instruction}` : "") +
+      `\n\nResumo original:\n${summary}`
+  );
+  return result.response.text();
+}
