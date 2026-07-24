@@ -691,25 +691,23 @@ function EventCard({
       )}
 
       {hasPdf && (
-        <p className="mt-2.5 text-xs font-medium text-accent-slate group-hover:underline">
+        <a
+          href={event.pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2.5 inline-block text-xs font-medium text-accent-slate hover:underline"
+        >
           View source document &#8599;
-        </p>
+        </a>
       )}
     </>
   );
 
-  const className =
-    "group block rounded-lg border border-paper-line bg-paper px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md";
-
-  if (hasPdf) {
-    return (
-      <a href={event.pdfUrl} target="_blank" rel="noopener noreferrer" className={className}>
-        {inner}
-      </a>
-    );
-  }
-
-  return <div className={className}>{inner}</div>;
+  return (
+    <div className="rounded-lg border border-paper-line bg-paper px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      {inner}
+    </div>
+  );
 }
 
 function MilestoneRow({ milestone }: { milestone: Milestone }) {
