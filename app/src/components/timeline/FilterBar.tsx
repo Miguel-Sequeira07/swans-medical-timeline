@@ -1,10 +1,15 @@
-import type { FilterOptions, GroupBy, TimelineFilters } from "@/lib/timeline";
+import type { FilterOptions, GroupBy, TimelineFilters, ViewDensity } from "@/lib/timeline";
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: "month", label: "Timeline" },
   { value: "provider", label: "Provider" },
   { value: "medicineType", label: "Medicine type" },
   { value: "bodyPart", label: "Body part" },
+];
+
+const DENSITY_OPTIONS: { value: ViewDensity; label: string }[] = [
+  { value: "detailed", label: "Detailed" },
+  { value: "compact", label: "Compact" },
 ];
 
 function toggle(set: Set<string>, value: string): Set<string> {
@@ -60,17 +65,21 @@ export function FilterBar({
   options,
   filters,
   groupBy,
+  density,
   isFiltered,
   onFiltersChange,
   onGroupByChange,
+  onDensityChange,
   onClear,
 }: {
   options: FilterOptions;
   filters: TimelineFilters;
   groupBy: GroupBy;
+  density: ViewDensity;
   isFiltered: boolean;
   onFiltersChange: (next: TimelineFilters) => void;
   onGroupByChange: (next: GroupBy) => void;
+  onDensityChange: (next: ViewDensity) => void;
   onClear: () => void;
 }) {
   return (
@@ -137,25 +146,48 @@ export function FilterBar({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-paper-line pt-3">
-        <div className="flex flex-wrap gap-1.5">
-          {GROUP_OPTIONS.map((option) => {
-            const active = option.value === groupBy;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={active}
-                onClick={() => onGroupByChange(option.value)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                  active
-                    ? "border-accent-slate bg-accent-slate/15 text-accent-slate"
-                    : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
-                }`}
-              >
-                Group by: {option.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {GROUP_OPTIONS.map((option) => {
+              const active = option.value === groupBy;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => onGroupByChange(option.value)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                    active
+                      ? "border-accent-slate bg-accent-slate/15 text-accent-slate"
+                      : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
+                  }`}
+                >
+                  Group by: {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 border-l border-paper-line pl-3">
+            {DENSITY_OPTIONS.map((option) => {
+              const active = option.value === density;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => onDensityChange(option.value)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                    active
+                      ? "border-accent-moss bg-accent-moss/15 text-accent-moss"
+                      : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
+                  }`}
+                >
+                  View: {option.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {isFiltered && (

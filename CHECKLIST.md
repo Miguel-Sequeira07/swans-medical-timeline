@@ -46,7 +46,9 @@ your AI assistant at the start of the day.
 - [x] Model + UI to add the **accident date** / manual milestones (not in the Excel)
 - [x] AI Q&A about the case (`askCaseQuestion` in `lib/ai.ts`, wired via `/api/case-qa` and `CaseAssistant.tsx`)
 - [x] AI: full treatment summary (`summarizeTreatment`, wired via `/api/case-summary`)
-- [x] AI: `rephraseSummary` wired to a per-event "Rephrase in plain English" button inside `Timeline.tsx`'s `EventCard`
+- [x] AI: `rephraseSummary` exists and has a route (`/api/rephrase-summary`), wired per-event as an
+      "Edit / rewrite summary" panel on each `EventCard` (manual edit or AI rewrite, both save back
+      to the case)
 - [x] Local persistence — save/load previous timelines (`localStorage`, `useSyncExternalStore`)
 - [x] Approximate cost per case, measured with real data — [`docs/custo-por-caso.md`](./docs/custo-por-caso.md)
 
@@ -56,11 +58,22 @@ your AI assistant at the start of the day.
 - [x] Filters: provider, medicine type, date, keyword
 - [x] Grouping: by provider / medicine type / body part
 - [x] Click an event → open `pdfUrl` (the source PDF)
-- [ ] Compact view (overview) vs detailed view (walkthrough)
-- [ ] "Before/after" the accident view (uses Person A's milestone)
-- [ ] Export to PDF
-- [ ] Export to PowerPoint
+- [x] Compact view (overview) vs detailed view (walkthrough) — "View: Compact/Detailed" toggle
+- [x] "Before/after" the accident view (uses Person A's milestone) — "Compare before/after" toggle
+- [x] Export to PDF (`lib/export-pdf.ts`, jsPDF) — verified the file opens and paginates correctly
+- [x] Export to PowerPoint (`lib/export-pptx.ts`, pptxgenjs) — title slide, key dates, paginated
+      table slides; verified real data lands in the deck
 - [x] Responsive, no complex instructions needed to use it ("ease of use" is an evaluation criterion)
+
+### Bonus depth (not in the original backlog, added for judging impact)
+
+- [x] Automatic key-date flagging — surgery/imaging/ER/discharge/admission detected from
+      recordType/medicineType (no AI call), shown as a badge on the event card
+- [x] Treatment-gap detection — flags ≥30-day gaps between encounters inline in the timeline
+      (insurers use treatment gaps to argue against claims, so surfacing them proactively is
+      real value for the attorney, not just decoration)
+- [x] Case density sparkline — one bar per month (including empty months) at the top of the
+      timeline, accident month highlighted, click-to-jump to that month's section
 
 ## 4. Continuous integration (both, all day)
 
