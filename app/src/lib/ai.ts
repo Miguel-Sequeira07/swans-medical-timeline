@@ -34,6 +34,25 @@ function getClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
+/**
+ * The Gemini SDK's thrown errors carry the full raw API error body
+ * (including internal quota-metric names, project ids, retry-delay
+ * JSON) straight through `.message` — never show that to a user
+ * directly, it's noise at best and an internal-details leak at worst.
+ * The free tier is a hard 20 requests/day/model cap (hit during this
+ * hackathon), so that specific case gets its own message.
+ */
+export function toFriendlyAiError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  if (/RESOURCE_EXHAUSTED|429|quota/i.test(message)) {
+    return "The AI is temporarily rate-limited (free-tier quota). Please try again in about a minute.";
+  }
+  if (/GOOGLE_GENERATIVE_AI_API_KEY/i.test(message)) {
+    return "AI features aren't configured for this deployment (missing API key).";
+  }
+  return "Couldn't reach the AI right now. Please try again.";
+}
+
 /** Each line is prefixed with the event's id so the model can cite it back. */
 function eventsAsContext(medicalCase: Case): string {
   return medicalCase.events

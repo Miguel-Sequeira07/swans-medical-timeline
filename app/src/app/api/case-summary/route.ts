@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { summarizeTreatment } from "@/lib/ai";
+import { summarizeTreatment, toFriendlyAiError } from "@/lib/ai";
 import { reviveCase } from "@/lib/revive-case";
 
 export async function POST(req: Request) {
@@ -10,9 +10,6 @@ export async function POST(req: Request) {
     const summary = await summarizeTreatment(reviveCase(rawCase));
     return NextResponse.json({ summary });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Error contacting the AI." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: toFriendlyAiError(err) }, { status: 500 });
   }
 }
