@@ -44,7 +44,10 @@ your AI assistant at the start of the day.
 
 - [x] Clear validation/error when the Excel doesn't match the expected format
 - [x] Model + UI to add the **accident date** / manual milestones (not in the Excel)
-- [x] AI Q&A about the case (`askCaseQuestion` in `lib/ai.ts`, wired via `/api/case-qa` and `CaseAssistant.tsx`)
+- [x] AI Q&A about the case (`askCaseQuestion` in `lib/ai.ts`, wired via `/api/case-qa` and `CaseAssistant.tsx`) —
+      returns structured `{ answer, citedEventIds }` (Gemini JSON mode), and the panel renders each cited event
+      as a clickable chip that jumps to its month section on the timeline (reuses the `#month-{key}` anchors
+      the density sparkline already relies on — no changes needed to `Timeline.tsx`)
 - [x] AI: full treatment summary (`summarizeTreatment`, wired via `/api/case-summary`)
 - [x] AI: `rephraseSummary` exists and has a route (`/api/rephrase-summary`), wired per-event as an
       "Edit / rewrite summary" panel on each `EventCard` (manual edit or AI rewrite, both save back

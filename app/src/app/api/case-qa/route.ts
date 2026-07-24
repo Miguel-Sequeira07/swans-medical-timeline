@@ -14,8 +14,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const answer = await askCaseQuestion(reviveCase(rawCase), question);
-    return NextResponse.json({ answer });
+    const result = await askCaseQuestion(reviveCase(rawCase), question);
+    return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Error contacting the AI." },
