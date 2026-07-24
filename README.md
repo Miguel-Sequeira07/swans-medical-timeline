@@ -115,6 +115,25 @@ para branches longas hoje.
 - [ ] Parágrafo curto: o que construíram e do que se orgulham
 - [ ] Testar com um Excel diferente da amostra antes de submeter (regra de ouro)
 
+## Estado do projeto (atualizar ao longo do dia)
+
+**Já feito:**
+- Repo criado e no GitHub: https://github.com/Miguel-Sequeira07/swans-medical-timeline-hackathon
+- Scaffold Next.js + TypeScript + Tailwind, a compilar sem erros (`npx tsc --noEmit`)
+- Dependências instaladas: `xlsx`, `@google/generative-ai`, `jspdf`, `pptxgenjs`
+- Schema partilhado em `src/types/event.ts` (`MedicalEvent`, `Milestone`, `Case`)
+- `src/lib/parse-excel.ts` — parser Excel → `MedicalEvent[]` (funcional, por validar com Excel real)
+- `src/lib/ai.ts` — stub Gemini com `askCaseQuestion` e `summarizeTreatment` (por testar, precisa de API key)
+- `src/components/timeline/Timeline.tsx` — timeline mínima em lista (ponto de partida, não é o floor final)
+
+**Por fazer a seguir (ordem sugerida):**
+1. Obter/gerar uma Gemini API key e colocar em `app/.env.local`
+2. Confirmar o Excel de amostra do hackathon (QR "Slides & Excel files" nos slides) e testar o parser com ele
+3. Pessoa A: ligar upload de ficheiro → `parseExcelFile` → estado da app
+4. Pessoa B: construir a timeline real (visual, não lista simples) a partir do `Timeline.tsx`
+5. Só depois: features do "ceiling" (ver backlog acima), escolher poucas e bem feitas
+6. Deploy no Vercel assim que houver algo a mostrar (deploy cedo, iterar em produção)
+
 ## Setup local
 
 ```bash
