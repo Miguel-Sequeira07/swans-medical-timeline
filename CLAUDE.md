@@ -80,6 +80,13 @@ always.** There is no internal-only exception — everything is English.
 - **Person A — Data & AI**: detailed context in [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md)
 - **Person B — Timeline & UX**: detailed context in [`docs/pessoa-b-contexto.md`](./docs/pessoa-b-contexto.md)
 
+## Claude Code skills
+
+`.claude/skills/timeline-views/` and `.claude/skills/case-exports/` document
+the timeline/filters/calendar architecture and the PDF/PPTX export pipeline
+in more depth than fits here — Claude Code picks these up automatically;
+read them yourself before making a non-trivial change in either area.
+
 ## Working conventions
 
 - Small, frequent commits, push straight to `master` (no long-lived
