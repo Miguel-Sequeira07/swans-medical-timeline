@@ -34,33 +34,35 @@ your AI assistant at the start of the day.
 
 ## 1. Floor — blocks everything else, do this first
 
-- [ ] **Person A** — Excel upload in the UI → `parseExcelFile()` → app state
-- [ ] **Person A** — tested with the real sample Excel (not just made-up data)
-- [ ] **Person B** — `Timeline.tsx` rendering the received event list (can still be visually simple)
-- [ ] **Both** — end-to-end flow working: upload → parse → timeline visible, no hardcoding of sample data
+- [x] **Person A** — Excel upload in the UI → `parseExcelFile()` → app state
+- [x] **Person A** — tested with the 5 real sample Excel files (not just made-up data)
+- [x] **Person B** — `Timeline.tsx` rendering the received event list (real visual timeline, not a plain list)
+- [x] **Both** — end-to-end flow working: upload → parse → timeline visible, no hardcoding of sample data
 - [ ] First Vercel deploy done (even if ugly) — deploy early, iterate in production
 
 ## 2. Person A — Data & AI
 
-- [ ] Clear validation/error when the Excel doesn't match the expected format
-- [ ] Model + UI to add the **accident date** / manual milestones (not in the Excel)
-- [ ] AI Q&A about the case (`askCaseQuestion` already exists in `lib/ai.ts` — wire it to the UI)
-- [ ] AI: full treatment summary (`summarizeTreatment` — wire it to the UI)
-- [ ] AI: rewrite/edit a summary (manual or AI-assisted)
-- [ ] Local persistence — save/load previous timelines (`localStorage`)
-- [ ] Calculate approximate cost per case (Gemini tokens × price) — needed for the submission
+- [x] Clear validation/error when the Excel doesn't match the expected format
+- [x] Model + UI to add the **accident date** / manual milestones (not in the Excel)
+- [x] AI Q&A about the case (`askCaseQuestion` in `lib/ai.ts`, wired via `/api/case-qa` and `CaseAssistant.tsx`)
+- [x] AI: full treatment summary (`summarizeTreatment`, wired via `/api/case-summary`)
+- [x] AI: `rephraseSummary` exists and has a route (`/api/rephrase-summary`), **but no UI button yet** —
+      makes more sense per-event inside `Timeline.tsx`, so it's left for Person B to wire (or whoever
+      has time) instead of duplicating UI outside the timeline
+- [x] Local persistence — save/load previous timelines (`localStorage`, `useSyncExternalStore`)
+- [x] Approximate cost per case, measured with real data — [`docs/custo-por-caso.md`](./docs/custo-por-caso.md)
 
 ## 3. Person B — Timeline & UX
 
-- [ ] Real visual timeline (not a plain list): time axis, readable event density
-- [ ] Filters: provider, medicine type, date, keyword
-- [ ] Grouping: by provider / medicine type / body part
-- [ ] Click an event → open `pdfUrl` (the source PDF)
+- [x] Real visual timeline (not a plain list): time axis, readable event density
+- [x] Filters: provider, medicine type, date, keyword
+- [x] Grouping: by provider / medicine type / body part
+- [x] Click an event → open `pdfUrl` (the source PDF)
 - [ ] Compact view (overview) vs detailed view (walkthrough)
 - [ ] "Before/after" the accident view (uses Person A's milestone)
 - [ ] Export to PDF
 - [ ] Export to PowerPoint
-- [ ] Responsive, no complex instructions needed to use it ("ease of use" is an evaluation criterion)
+- [x] Responsive, no complex instructions needed to use it ("ease of use" is an evaluation criterion)
 
 ## 4. Continuous integration (both, all day)
 
@@ -74,7 +76,9 @@ your AI assistant at the start of the day.
 - [ ] **Deployed** app link, not localhost
 - [ ] List of assumptions (e.g. "assumes a Gemini API key")
 - [ ] Note on where the data lives (client-side / localStorage is a valid answer)
-- [ ] Approximate cost per case processed
+- [x] Approximate cost per case processed — real numbers measured in
+      [`docs/custo-por-caso.md`](./docs/custo-por-caso.md) (~$0.05 to ~$1.00
+      per case, depending on size)
 - [ ] Short paragraph: what you built and what you're proud of
 - [ ] Tested end-to-end with a new Excel, no errors in the browser
 - [ ] Link submitted **before 5:00 PM** (the earlier you submit, the earlier you present)
