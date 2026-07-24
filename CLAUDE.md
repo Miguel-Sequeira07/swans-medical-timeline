@@ -46,10 +46,13 @@ the boundary between Person A's work (data/AI) and Person B's
 ## Stack
 
 Next.js + React + TypeScript (`app/`), Tailwind CSS, `xlsx` for parsing,
-`@google/genai` (Gemini, model `gemini-3.6-flash` — **not** the
-deprecated `@google/generative-ai` package, and not `gemini-2.0-flash`,
-retired on Jun 1 2026) for AI, `jspdf`/`pptxgenjs` for export,
-`localStorage` for client-side persistence. Deployed on Vercel.
+`@google/genai` (Gemini, model `gemini-3.5-flash-lite`, configurable via
+`GEMINI_MODEL` — **not** the deprecated `@google/generative-ai` package,
+not `gemini-2.0-flash` (retired Jun 1 2026), and not `gemini-3.6-flash`
+(switched away from it: 20 requests/day free-tier cap per project, hit
+mid-hackathon — see `app/src/lib/ai.ts` for the full story and what to
+try next if this model's quota also runs out) for AI, `jspdf`/`pptxgenjs`
+for export, `localStorage` for client-side persistence. Deployed on Vercel.
 
 ## Language: everything is in English
 

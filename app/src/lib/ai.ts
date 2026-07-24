@@ -4,24 +4,28 @@ import type { Case } from "@/types/event";
 /**
  * Requires GOOGLE_GENERATIVE_AI_API_KEY in app/.env.local (see .env.local.example).
  *
- * Model: gemini-3.6-flash, confirmed working with a real key on
- * Jul 24 2026 (gemini-2.0-flash has been deprecated since Jun 1 2026;
- * gemini-2.5-flash no longer accepts new accounts). Configurable via
- * GEMINI_MODEL.
+ * Model: gemini-3.5-flash-lite (switched from gemini-3.6-flash on
+ * Jul 24 2026, afternoon — 3.6-flash's free tier is capped at 20
+ * requests/DAY per project, which we blew through mid-hackathon just
+ * from testing; a second API key from the same Google account/project
+ * didn't help, since this quota is scoped per-project-per-model, not
+ * per-key. 3.5-flash-lite had a completely separate, unused quota and
+ * is also ~5x cheaper. If this one gets exhausted too, check
+ * https://aistudio.google.com/rate-limit for what still has headroom
+ * before creating yet another key. Configurable via GEMINI_MODEL.
  *
  * thinkingLevel "minimal": the tasks here are reading/summarizing
  * context that's already provided, not multi-step reasoning — tested
  * (Jul 24 2026) that this eliminates "thinking tokens" (which by
  * default cost as much as the response text) with no noticeable quality
- * loss. Gemini 3 Flash doesn't allow disabling thinking entirely,
- * "minimal" is the lowest setting available.
+ * loss, on both gemini-3.6-flash and gemini-3.5-flash-lite.
  *
  * Prompts are in English on purpose: the end users are US attorneys and
  * juries (see the challenge slides), not our team — tested that a
  * Portuguese prompt produces Portuguese answers, which would be unusable
  * for the real use case.
  */
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
+const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.5-flash-lite";
 const GENERATION_CONFIG = {
   thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
 };

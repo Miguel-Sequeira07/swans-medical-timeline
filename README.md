@@ -56,7 +56,7 @@ You don't need to do everything — the evaluation criteria reward
 ## Stack
 
 - **Next.js + React + TypeScript** (`app/`), Tailwind CSS
-- **Gemini API** (`@google/genai`, model `gemini-3.6-flash`) for AI features
+- **Gemini API** (`@google/genai`, model `gemini-3.5-flash-lite`) for AI features
 - Excel parsing: `xlsx` (SheetJS), client-side
 - Export: `jspdf` (PDF) / `pptxgenjs` (PowerPoint)
 - Persistence: `localStorage` (client-side, simple and valid for the
@@ -141,7 +141,7 @@ time for long-lived branches today.
   milestone
 - `src/lib/ai.ts` + routes `src/app/api/{case-qa,case-summary,rephrase-summary}` +
   `src/components/ai/CaseAssistant.tsx` — Q&A and treatment summary with
-  Gemini (`gemini-3.6-flash`, `thinkingLevel: minimal`), **tested with a
+  Gemini (`gemini-3.5-flash-lite`, `thinkingLevel: minimal`), **tested with a
   real key, answers in English**
 - `src/lib/storage.ts` + `src/hooks/use-cases.ts` — local persistence
   (up to 5 cases), previous cases listed on the upload screen
