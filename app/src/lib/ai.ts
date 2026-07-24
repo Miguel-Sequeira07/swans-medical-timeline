@@ -2,24 +2,24 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import type { Case } from "@/types/event";
 
 /**
- * Requer GOOGLE_GENERATIVE_AI_API_KEY em app/.env.local (ver .env.local.example).
+ * Requires GOOGLE_GENERATIVE_AI_API_KEY in app/.env.local (see .env.local.example).
  *
- * Modelo: gemini-3.6-flash, confirmado a funcionar com uma chave real em
- * 24 jul 2026 (gemini-2.0-flash está descontinuado desde 1 jun 2026;
- * gemini-2.5-flash já não aceita contas novas). Configurável via
+ * Model: gemini-3.6-flash, confirmed working with a real key on
+ * Jul 24 2026 (gemini-2.0-flash has been deprecated since Jun 1 2026;
+ * gemini-2.5-flash no longer accepts new accounts). Configurable via
  * GEMINI_MODEL.
  *
- * thinkingLevel "minimal": as tarefas aqui são leitura/resumo de contexto
- * já fornecido, não raciocínio multi-passo — testado (24 jul 2026) que
- * isto elimina os "thinking tokens" (que por defeito custam tanto quanto
- * o texto de resposta) sem perda percetível de qualidade. Gemini 3 Flash
- * não permite desligar o thinking por completo, "minimal" é o mais baixo
- * possível.
+ * thinkingLevel "minimal": the tasks here are reading/summarizing
+ * context that's already provided, not multi-step reasoning — tested
+ * (Jul 24 2026) that this eliminates "thinking tokens" (which by
+ * default cost as much as the response text) with no noticeable quality
+ * loss. Gemini 3 Flash doesn't allow disabling thinking entirely,
+ * "minimal" is the lowest setting available.
  *
- * Prompts em inglês de propósito: os utilizadores finais são advogados e
- * júris nos EUA (ver slides do desafio), não a nossa equipa — testado que
- * um prompt em português produz respostas em português, o que seria
- * inutilizável para o caso de uso real.
+ * Prompts are in English on purpose: the end users are US attorneys and
+ * juries (see the challenge slides), not our team — tested that a
+ * Portuguese prompt produces Portuguese answers, which would be unusable
+ * for the real use case.
  */
 const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
 const GENERATION_CONFIG = {

@@ -1,11 +1,11 @@
 /**
- * Schema partilhado — fonte da verdade dos dados.
- * Combinado entre as duas pessoas na Fase 0. Alterações aqui afetam
- * quem consome (timeline/UX) e quem produz (parsing/AI) os dados —
- * avisar o outro antes de mudar.
+ * Shared schema — source of truth for the data.
+ * Agreed between both people in Phase 0. Changes here affect whoever
+ * consumes (timeline/UX) and whoever produces (parsing/AI) the data —
+ * tell the other person before changing it.
  */
 
-/** Uma linha do Excel fornecido, tal como vem do ficheiro. */
+/** One row of the provided Excel, exactly as it comes from the file. */
 export interface RawMedicalEventRow {
   "Encounter Date": string;
   "Primary Provider": string;
@@ -17,7 +17,7 @@ export interface RawMedicalEventRow {
   "Link To Pdf"?: string;
 }
 
-/** Um encontro médico, já normalizado e pronto para a timeline. */
+/** A medical encounter, already normalized and ready for the timeline. */
 export interface MedicalEvent {
   id: string;
   date: Date;
@@ -30,7 +30,7 @@ export interface MedicalEvent {
   pdfUrl?: string;
 }
 
-/** Marco manual adicionado pelo utilizador (não vem do Excel). */
+/** A manual milestone added by the user (not from the Excel). */
 export interface Milestone {
   id: string;
   label: string;
@@ -39,7 +39,7 @@ export interface Milestone {
   notes?: string;
 }
 
-/** Um caso completo: eventos do Excel + marcos manuais + metadados. */
+/** A complete case: Excel events + manual milestones + metadata. */
 export interface Case {
   id: string;
   name: string;

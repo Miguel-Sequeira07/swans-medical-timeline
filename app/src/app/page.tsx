@@ -56,13 +56,15 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
-      <header>
-        <h1 className="text-2xl font-semibold">Medical Timeline</h1>
-        <p className="text-sm text-zinc-500">
-          Upload a case Excel to generate a treatment timeline.
-        </p>
-      </header>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6">
+      {!medicalCase && (
+        <header>
+          <h1 className="font-display text-2xl italic text-foreground">Medical Timeline</h1>
+          <p className="text-sm text-ink-muted">
+            Upload a case Excel to generate a treatment timeline.
+          </p>
+        </header>
+      )}
 
       {!medicalCase ? (
         <div className="flex flex-col gap-8">
@@ -75,17 +77,11 @@ export default function Home() {
         </div>
       ) : (
         <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-medium">{medicalCase.name}</h2>
-              <p className="text-sm text-zinc-500">
-                {medicalCase.events.length} events
-              </p>
-            </div>
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={() => setMedicalCase(null)}
-              className="text-sm text-zinc-500 underline"
+              className="text-sm text-ink-muted underline"
             >
               Load another file
             </button>

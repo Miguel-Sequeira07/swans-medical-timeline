@@ -1,65 +1,68 @@
-# Contexto — Pessoa A: Dados & AI
+# Context — Person A: Data & AI
 
-Cola isto no teu assistente de AI (Claude Code, Codex, etc.) no início do dia,
-ou pede-lhe para ler este ficheiro. Contexto geral do projeto em
-[`../CLAUDE.md`](../CLAUDE.md) e [`../README.md`](../README.md) — lê primeiro
-se ainda não leste.
+Paste this into your AI assistant (Claude Code, Codex, etc.) at the
+start of the day, or ask it to read this file. General project context
+in [`../CLAUDE.md`](../CLAUDE.md) and [`../README.md`](../README.md) —
+read those first if you haven't.
 
-## A tua fatia do produto
+## Your slice of the product
 
-Tudo o que entra dados no sistema e tudo o que usa AI. Se falhar, a Pessoa B
-não tem o que mostrar na timeline — por isso o **floor é a tua prioridade
-absoluta** antes de qualquer feature de AI.
+Everything that gets data into the system, and everything that uses AI.
+If this breaks, Person B has nothing to show on the timeline — so the
+**floor is your absolute priority** before any AI feature.
 
-## Ficheiros que és dono/a
+## Files you own
 
-- `app/src/lib/parse-excel.ts` — Excel → `MedicalEvent[]` (já existe um
-  parser inicial, valida/robustece)
-- `app/src/lib/ai.ts` — integração Gemini (`askCaseQuestion`,
-  `summarizeTreatment` já existem como stubs, por testar e ligar à UI)
-- `app/src/types/event.ts` — schema partilhado (não mudes sozinho/a, é
-  fronteira com a Pessoa B — avisa antes de alterar)
-- Componentes de upload, formulário de milestone/data do acidente, e
-  qualquer painel de AI (Q&A, resumo, rephrase) na UI
+- `app/src/lib/parse-excel.ts` — Excel → `MedicalEvent[]` (an initial
+  parser already exists; validate/harden it)
+- `app/src/lib/ai.ts` — Gemini integration (`askCaseQuestion`,
+  `summarizeTreatment` already exist as stubs, need testing and wiring
+  to the UI)
+- `app/src/types/event.ts` — shared schema (don't change it alone, it's
+  the boundary with Person B — tell them before altering it)
+- Upload components, the milestone/accident-date form, and any AI panel
+  (Q&A, summary, rephrase) in the UI
 
-## Ordem de trabalho recomendada
+## Recommended work order
 
-1. **Floor**: componente de upload de ficheiro → chama `parseExcelFile()` →
-   guarda o resultado no estado da app, de forma que a Pessoa B o consiga
-   consumir (`Case.events`). Testa com o Excel de amostra real do hackathon
-   (QR code "Slides & Excel files" nos slides), não só com dados inventados.
-2. Validação: o que acontece se o Excel não tiver as colunas certas, tiver
-   linhas vazias, datas em formatos diferentes? Erro claro para o utilizador,
-   nunca crash silencioso.
-3. Data do acidente / milestones manuais: não vem do Excel. Cria o modelo
-   (`Milestone` já existe em `event.ts`) e uma UI simples para adicionar.
-   A Pessoa B vai usar isto para a vista "antes/depois".
-4. Gemini: obter API key em https://aistudio.google.com/apikey, colocar em
-   `app/.env.local` (`GOOGLE_GENERATIVE_AI_API_KEY=...`, nunca committar).
-   Testar `askCaseQuestion` e `summarizeTreatment` com dados reais.
-5. Ligar as funções de AI à UI: um campo de pergunta livre (Q&A), um botão
-   "gerar resumo do tratamento", e uma forma de reescrever um summary
-   (manual ou com AI) — decidir com a Pessoa B onde isto vive na interface.
-6. Persistência local: guardar/carregar casos anteriores via `localStorage`
-   (client-side é uma resposta válida para a submissão, documentar isso).
-7. Custo aproximado por caso: contar tokens/chamadas Gemini típicas por caso
-   e estimar custo — é um item obrigatório da submissão final.
+1. **Floor**: a file-upload component → calls `parseExcelFile()` →
+   stores the result in app state so Person B can consume it
+   (`Case.events`). Test with the real hackathon sample Excel (the
+   "Slides & Excel files" QR code in the slides), not just made-up data.
+2. Validation: what happens if the Excel doesn't have the right
+   columns, has empty rows, dates in different formats? Clear error for
+   the user, never a silent crash.
+3. Accident date / manual milestones: not in the Excel. Build the model
+   (`Milestone` already exists in `event.ts`) and a simple UI to add
+   them. Person B will use this for the before/after view.
+4. Gemini: get an API key at https://aistudio.google.com/apikey, put it
+   in `app/.env.local` (`GOOGLE_GENERATIVE_AI_API_KEY=...`, never
+   commit it). Test `askCaseQuestion` and `summarizeTreatment` with real
+   data.
+5. Wire the AI functions to the UI: a free-text question field (Q&A), a
+   "generate treatment summary" button, and a way to rewrite a summary
+   (manual or AI-assisted) — decide with Person B where this lives in
+   the interface.
+6. Local persistence: save/load previous cases via `localStorage`
+   (client-side is a valid answer for the submission, document that).
+7. Approximate cost per case: count typical Gemini tokens/calls per case
+   and estimate cost — this is a required item for the final submission.
 
-## Regras que não podes esquecer
+## Rules you can't forget
 
-- **Nunca hardcode** valores do Excel de amostra (nomes, datas, providers).
-  A app é testada no fim com um Excel diferente.
-- Dados médicos são sensíveis — documenta claramente onde ficam guardados
-  (é suposto responder "client-side, perdido ao refresh" se for esse o caso;
-  é uma resposta perfeitamente válida, só tem de estar documentada).
-- Se mudares `event.ts`, avisa a Pessoa B imediatamente — o componente de
-  timeline dela depende diretamente desse schema.
+- **Never hardcode** values from the sample Excel (names, dates,
+  providers). The app is tested at the end with a different Excel.
+- Medical data is sensitive — clearly document where it's stored (it's
+  fine to answer "client-side, lost on refresh" if that's the case;
+  that's a perfectly valid answer, it just needs to be documented).
+- If you change `event.ts`, tell Person B immediately — her timeline
+  component depends directly on that schema.
 
-## Definição de "pronto" para cada peça
+## Definition of "done" for each piece
 
-- Upload + parse: funciona com o Excel de amostra E com um Excel modificado
-  manualmente (linhas a menos, ordem de colunas igual mas valores diferentes).
-- AI: respostas relevantes e factuais, sem inventar datas que não existem
-  nos dados (checar isto manualmente antes de dar por fechado).
-- Milestone: a data do acidente sobrevive a um reload se a persistência
-  estiver ligada; caso contrário, está claro na UI que é só da sessão.
+- Upload + parse: works with the sample Excel AND with a manually
+  modified Excel (fewer rows, same column order but different values).
+- AI: relevant, factual answers, without inventing dates that aren't in
+  the data (check this manually before calling it done).
+- Milestone: the accident date survives a reload if persistence is
+  wired up; otherwise, it's clear in the UI that it's session-only.
