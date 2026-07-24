@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rephraseSummary } from "@/lib/ai";
+import { rephraseSummary, toFriendlyAiError } from "@/lib/ai";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -16,9 +16,6 @@ export async function POST(req: Request) {
     const rephrased = await rephraseSummary(summary, instruction);
     return NextResponse.json({ rephrased });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Error contacting the AI." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: toFriendlyAiError(err) }, { status: 500 });
   }
 }
