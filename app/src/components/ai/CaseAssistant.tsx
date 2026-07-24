@@ -28,10 +28,10 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
         body: JSON.stringify({ case: medicalCase, question }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erro desconhecido");
+      if (!res.ok) throw new Error(data.error ?? "Unknown error");
       setAnswer(data.answer);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível obter resposta.");
+      setError(err instanceof Error ? err.message : "Couldn't get an answer.");
     } finally {
       setLoadingQa(false);
     }
@@ -48,10 +48,10 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
         body: JSON.stringify({ case: medicalCase }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erro desconhecido");
+      if (!res.ok) throw new Error(data.error ?? "Unknown error");
       setSummary(data.summary);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível gerar o resumo.");
+      setError(err instanceof Error ? err.message : "Couldn't generate the summary.");
     } finally {
       setLoadingSummary(false);
     }
@@ -59,14 +59,14 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <h3 className="text-sm font-medium">Assistente AI</h3>
+      <h3 className="text-sm font-medium">AI assistant</h3>
 
       <form onSubmit={handleAsk} className="flex flex-wrap gap-2">
         <input
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ex: quando foi o primeiro MRI?"
+          placeholder="e.g. when was the first MRI?"
           className="min-w-64 flex-1 rounded border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-black"
         />
         <button
@@ -74,7 +74,7 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
           disabled={loadingQa}
           className="rounded-full bg-black px-4 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
         >
-          {loadingQa ? "A pensar..." : "Perguntar"}
+          {loadingQa ? "Thinking..." : "Ask"}
         </button>
       </form>
       {answer && (
@@ -88,7 +88,7 @@ export function CaseAssistant({ medicalCase }: CaseAssistantProps) {
           disabled={loadingSummary}
           className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-medium disabled:opacity-50 dark:border-zinc-700"
         >
-          {loadingSummary ? "A gerar..." : "Gerar resumo do tratamento"}
+          {loadingSummary ? "Generating..." : "Generate treatment summary"}
         </button>
       </div>
       {summary && (

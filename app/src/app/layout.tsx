@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Medical Timeline",
-  description: "Timeline visual do tratamento de um caso de danos pessoais.",
+  description: "A visual treatment timeline for a personal-injury case.",
 };
 
 export default function RootLayout({

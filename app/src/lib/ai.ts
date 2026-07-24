@@ -1,59 +1,89 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import type { Case } from "@/types/event";
 
 /**
- * Ponto de partida da Pessoa A (Dados & AI).
  * Requer GOOGLE_GENERATIVE_AI_API_KEY em app/.env.local (ver .env.local.example).
+ *
+ * Modelo: gemini-3.6-flash, confirmado a funcionar com uma chave real em
+ * 24 jul 2026 (gemini-2.0-flash está descontinuado desde 1 jun 2026;
+ * gemini-2.5-flash já não aceita contas novas). Configurável via
+ * GEMINI_MODEL.
+ *
+ * thinkingLevel "minimal": as tarefas aqui são leitura/resumo de contexto
+ * já fornecido, não raciocínio multi-passo — testado (24 jul 2026) que
+ * isto elimina os "thinking tokens" (que por defeito custam tanto quanto
+ * o texto de resposta) sem perda percetível de qualidade. Gemini 3 Flash
+ * não permite desligar o thinking por completo, "minimal" é o mais baixo
+ * possível.
+ *
+ * Prompts em inglês de propósito: os utilizadores finais são advogados e
+ * júris nos EUA (ver slides do desafio), não a nossa equipa — testado que
+ * um prompt em português produz respostas em português, o que seria
+ * inutilizável para o caso de uso real.
  */
-function getModel() {
+const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
+const GENERATION_CONFIG = {
+  thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+};
+
+function getClient(): GoogleGenAI {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) {
-    throw new Error("GOOGLE_GENERATIVE_AI_API_KEY não está definida");
+    throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
   }
-  const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  return new GoogleGenAI({ apiKey });
 }
 
-/** Q&A sobre o caso: "quando foi o primeiro MRI?", "quantas sessões de fisio?" */
+function eventsAsContext(medicalCase: Case): string {
+  return medicalCase.events
+    .map((e) => {
+      const date = Number.isNaN(e.date.getTime())
+        ? "date unknown"
+        : e.date.toISOString().slice(0, 10);
+      return `${date} — ${e.recordType}: ${e.summary}`;
+    })
+    .join("\n");
+}
+
+/** Q&A about the case: "when was the first MRI?", "how many PT sessions?" */
 export async function askCaseQuestion(
   medicalCase: Case,
   question: string
 ): Promise<string> {
-  const model = getModel();
-  const context = medicalCase.events
-    .map((e) => `${e.date.toISOString().slice(0, 10)} — ${e.recordType}: ${e.summary}`)
-    .join("\n");
-
-  const result = await model.generateContent(
-    `Eventos médicos do caso:\n${context}\n\nPergunta: ${question}\nResponde de forma curta e factual, citando datas quando relevante.`
-  );
-  return result.response.text();
+  const ai = getClient();
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: `Medical events for this case:\n${eventsAsContext(medicalCase)}\n\nQuestion: ${question}\nAnswer briefly and factually, in English, citing dates when relevant.`,
+    config: GENERATION_CONFIG,
+  });
+  return response.text ?? "";
 }
 
-/** Gera um resumo médico do tratamento completo. */
+/** Generates a summary of the full treatment. */
 export async function summarizeTreatment(medicalCase: Case): Promise<string> {
-  const model = getModel();
-  const context = medicalCase.events
-    .map((e) => `${e.date.toISOString().slice(0, 10)} — ${e.recordType}: ${e.summary}`)
-    .join("\n");
-
-  const result = await model.generateContent(
-    `Resume o tratamento médico abaixo num parágrafo claro para um advogado apresentar a um júri:\n\n${context}`
-  );
-  return result.response.text();
+  const ai = getClient();
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: `Summarize the medical treatment below in a clear paragraph, in English, for an attorney to present to a jury:\n\n${eventsAsContext(medicalCase)}`,
+    config: GENERATION_CONFIG,
+  });
+  return response.text ?? "";
 }
 
-/** Reescreve o summary de um único evento, mais claro para leigos. */
+/** Rewrites a single event's summary, in plain English for a layperson. */
 export async function rephraseSummary(
   summary: string,
   instruction?: string
 ): Promise<string> {
-  const model = getModel();
-  const result = await model.generateContent(
-    `Reescreve este resumo médico de forma clara para um leigo (júri/cliente), ` +
-      `mantendo todos os factos clínicos, sem inventar informação nova.` +
-      (instruction ? ` Instrução adicional: ${instruction}` : "") +
-      `\n\nResumo original:\n${summary}`
-  );
-  return result.response.text();
+  const ai = getClient();
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents:
+      `Rewrite this medical summary in plain English for a layperson (jury/client), ` +
+      `keeping every clinical fact, without inventing new information.` +
+      (instruction ? ` Additional instruction: ${instruction}` : "") +
+      `\n\nOriginal summary:\n${summary}`,
+    config: GENERATION_CONFIG,
+  });
+  return response.text ?? "";
 }

@@ -60,7 +60,7 @@ export default function Home() {
       <header>
         <h1 className="text-2xl font-semibold">Medical Timeline</h1>
         <p className="text-sm text-zinc-500">
-          Carrega o Excel de um caso para gerar a timeline de tratamento.
+          Upload a case Excel to generate a treatment timeline.
         </p>
       </header>
 
@@ -79,7 +79,7 @@ export default function Home() {
             <div>
               <h2 className="text-lg font-medium">{medicalCase.name}</h2>
               <p className="text-sm text-zinc-500">
-                {medicalCase.events.length} eventos
+                {medicalCase.events.length} events
               </p>
             </div>
             <button
@@ -87,14 +87,14 @@ export default function Home() {
               onClick={() => setMedicalCase(null)}
               className="text-sm text-zinc-500 underline"
             >
-              Carregar outro ficheiro
+              Load another file
             </button>
           </div>
           {saveFailed && (
             <p className="text-xs text-amber-600">
-              Não foi possível guardar este caso neste browser (armazenamento
-              cheio). A timeline funciona na mesma, só não fica disponível
-              depois de recarregar a página.
+              Couldn&apos;t save this case in this browser (storage full).
+              The timeline still works, it just won&apos;t be available
+              after a page reload.
             </p>
           )}
           <MilestoneForm

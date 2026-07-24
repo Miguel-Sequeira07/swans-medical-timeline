@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ summary });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Erro ao contactar a AI." },
+      { error: err instanceof Error ? err.message : "Error contacting the AI." },
       { status: 500 }
     );
   }

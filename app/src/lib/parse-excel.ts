@@ -32,7 +32,7 @@ export async function parseExcelFile(file: File): Promise<MedicalEvent[]> {
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   if (!sheet?.["!ref"]) {
-    throw new Error("A folha está vazia ou não tem um intervalo de dados válido.");
+    throw new Error("This sheet is empty or has no valid data range.");
   }
 
   const range = XLSX.utils.decode_range(sheet["!ref"]);
@@ -41,7 +41,7 @@ export async function parseExcelFile(file: File): Promise<MedicalEvent[]> {
   const missing = EXPECTED_COLUMNS.filter((c) => !headers.includes(c));
   if (missing.length > 0) {
     throw new Error(
-      `Excel fora do formato esperado. Colunas em falta: ${missing.join(", ")}`
+      `This Excel doesn't match the expected format. Missing columns: ${missing.join(", ")}`
     );
   }
 

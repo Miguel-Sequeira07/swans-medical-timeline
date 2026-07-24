@@ -14,7 +14,7 @@ export function PreviousCases({ cases, onOpen, onDelete }: PreviousCasesProps) {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-medium text-zinc-500">
-        Timelines guardadas neste browser
+        Timelines saved in this browser
       </h3>
       <ul className="flex flex-col gap-2">
         {cases.map((c) => (
@@ -29,7 +29,7 @@ export function PreviousCases({ cases, onOpen, onDelete }: PreviousCasesProps) {
             >
               <span className="text-sm font-medium">{c.name}</span>
               <span className="ml-2 text-xs text-zinc-500">
-                {c.events.length} eventos · atualizado{" "}
+                {c.events.length} events · updated{" "}
                 {c.updatedAt.toLocaleDateString()}
               </span>
             </button>
@@ -38,7 +38,7 @@ export function PreviousCases({ cases, onOpen, onDelete }: PreviousCasesProps) {
               onClick={() => onDelete(c.id)}
               className="text-xs text-zinc-500 underline"
             >
-              apagar
+              delete
             </button>
           </li>
         ))}

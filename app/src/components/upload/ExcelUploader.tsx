@@ -19,13 +19,13 @@ export function ExcelUploader({ onParsed }: ExcelUploaderProps) {
     try {
       const events = await parseExcelFile(file);
       if (events.length === 0) {
-        setError("O Excel não tem nenhuma linha com dados reconhecíveis.");
+        setError("This Excel file has no rows we could recognize.");
         return;
       }
       onParsed(events, file.name);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Não foi possível ler este ficheiro."
+        err instanceof Error ? err.message : "We couldn't read this file."
       );
     } finally {
       setLoading(false);
@@ -34,9 +34,9 @@ export function ExcelUploader({ onParsed }: ExcelUploaderProps) {
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border-2 border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
-      <p className="text-lg font-medium">Carrega o Excel do caso</p>
+      <p className="text-lg font-medium">Upload the case Excel</p>
       <p className="max-w-md text-sm text-zinc-500">
-        Uma linha por encontro médico. Colunas esperadas: Encounter Date,
+        One row per medical encounter. Expected columns: Encounter Date,
         Primary Provider, Facility, Body Parts, Medicine Type, Record Type,
         Summary, Link To Pdf.
       </p>
@@ -57,7 +57,7 @@ export function ExcelUploader({ onParsed }: ExcelUploaderProps) {
         disabled={loading}
         className="rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
       >
-        {loading ? "A processar..." : "Escolher ficheiro .xlsx"}
+        {loading ? "Processing..." : "Choose .xlsx file"}
       </button>
       {error && (
         <p className="max-w-md text-sm text-red-600" role="alert">
