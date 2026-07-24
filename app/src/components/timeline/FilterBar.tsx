@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon, CloseIcon } from "@/components/icons";
 import type {
   FilterOptions,
   GroupBy,
@@ -136,16 +137,17 @@ export function FilterBar({
           }`}
         >
           Filters{advancedCount > 0 ? ` (${advancedCount})` : ""}
-          <span aria-hidden>{showAdvanced ? "▲" : "▼"}</span>
+          {showAdvanced ? <ChevronUpIcon className="h-3.5 w-3.5" /> : <ChevronDownIcon className="h-3.5 w-3.5" />}
         </button>
 
         {isFiltered && (
           <button
             type="button"
             onClick={onClear}
-            className="text-xs font-medium text-accent-rust hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-accent-rust hover:underline"
           >
-            Clear ×
+            Clear
+            <CloseIcon className="h-3 w-3" />
           </button>
         )}
       </div>
