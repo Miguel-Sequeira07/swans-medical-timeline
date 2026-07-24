@@ -1,78 +1,61 @@
 # Submission — Medical Timeline
 
-Rascunho pronto a copiar/colar para o formulário de submissão do hackathon.
-Revê e ajusta antes de submeter — em particular o parágrafo final, que deve
-refletir o que **vocês** sentem que construíram, não só o que eu escrevi.
+Final answers, ready to copy into the hackathon's submission form.
 
 ## Link
 
 **https://swans-medical-timeline.vercel.app**
 
-## Assumptions
+## Assumptions your app makes
 
 - Assumes a Gemini API key (`GOOGLE_GENERATIVE_AI_API_KEY`) is configured
   server-side for the AI features (Q&A, treatment summary, rephrase) to
-  work. Without it, everything else — upload, parsing, the timeline,
-  filters, milestones — still works normally; only the AI panel shows an
-  error.
+  work; everything else (upload, parsing, timeline, filters, milestones,
+  export) works without it.
 - Assumes the uploaded Excel matches the documented column format
   (`Encounter Date`, `Primary Provider`, `Facility`, `Body Parts`,
-  `Medicine Type`, `Record Type`, `Summary`, `Link To Pdf`). A file that
-  doesn't match gets a clear error naming the missing columns, not a
-  guess.
-- Assumes `Link To Pdf` is a real cell hyperlink (as in the provided
-  samples), not literal URL text — we read the hyperlink target and fall
-  back to the visible cell text if there's no hyperlink.
+  `Medicine Type`, `Record Type`, `Summary`, `Link To Pdf`); a mismatched
+  file gets a clear error, not a guess.
+- Assumes `Link To Pdf` is a real cell hyperlink, as in the provided
+  samples, not literal URL text.
 - Assumes multiple providers in `Primary Provider` are separated by `;`,
   with `,` reserved for the name/credential separator within one provider
-  (e.g. "Astrit H. Hajdari, MD"). Confirmed against all 5 sample files:
-  100% use `;` between people, 0% use a bare comma.
+  (e.g. "Astrit H. Hajdari, MD").
 
-## Where data goes
+## Approximate cost to run one case through the app
 
-- The Excel is parsed **entirely in the browser** — no file is ever
-  uploaded to a server.
-- The AI features (Q&A, summary, rephrase) send the relevant event text
-  to Google's Gemini API, proxied through our own server-side API routes
-  so the API key never reaches the browser. That request data isn't
-  logged or stored on our side.
-- Timelines you choose to keep are saved in the browser's `localStorage`
-  only (up to 5 most recent cases) — never sent to a database. Clearing
-  browser storage or switching devices loses them. This is a deliberate,
-  documented trade-off for the scope of a one-day hackathon.
+~$0.05 to ~$1.00 per case, measured against real Gemini usage (not
+estimated). Full breakdown in
+[`docs/custo-por-caso.md`](./docs/custo-por-caso.md). Our 5 sample cases
+ranged from 49 to 820 medical events, and cost scales almost entirely
+with case size and number of AI questions asked, not with complexity.
 
-## Approximate cost to run one case
+## Where the app sends or stores data
 
-Measured against real Gemini usage (not estimated), full breakdown in
-[`docs/custo-por-caso.md`](./docs/custo-por-caso.md):
+The Excel is parsed entirely in the browser — no file is ever uploaded to
+a server. AI features (Q&A, summary, rephrase) send the relevant event
+text to Google's Gemini API through our own server-side routes, so the
+API key never reaches the browser; that data isn't logged or stored on
+our side. Timelines you choose to keep are saved in the browser's
+`localStorage` only (up to 5 most recent cases) — never sent to a
+database. Clearing browser storage or switching devices loses them, a
+deliberate trade-off for a one-day hackathon.
 
-**Roughly $0.05 to $1.00 per case**, depending on size — our 5 sample
-cases ranged from 49 to 820 medical events, and cost scales almost
-entirely with case size (input tokens), not with what's asked. One
-caveat we're disclosing rather than hiding: each AI question currently
-resends the full case context (no caching), so cost grows linearly with
-the number of questions asked per session — the first optimization we'd
-make with more time.
+## What we're most proud of
 
-## What we built, and what we're proud of
-
-*(rascunho — ajustem ao vosso gosto antes de submeter)*
-
-We built an end-to-end medical timeline tool that turns a case's Excel
-chronology into something an attorney can actually use in front of a
-jury or client — not just a rendered table. It handles the real
-messiness of these exports: PDF links disguised as plain hyperlink text,
-records with no encounter date, provider names with embedded commas,
-cases ranging from 49 to 820 events. On top of the core timeline we
-added filtering and grouping (by provider, medicine type, body part,
-date, keyword), a way to mark the accident date the Excel doesn't
-contain, an AI assistant that answers factual questions and drafts a
-jury-ready summary from the real event data, a plain-English rephrase
-button for any individual record, and local persistence so an attorney
-can come back to a case later.
-
-What we're proudest of: we didn't just build against the sample files —
-we deliberately tested against a brand-new synthetic Excel with edge
-cases we invented, and it caught a real bug (provider names getting
-shredded by a naive comma split) that would otherwise have silently
-corrupted data in front of the judges.
+We built an end-to-end medical timeline that turns a case's Excel
+chronology into something an attorney can actually use with a jury, a
+client, or an adjuster — not just a rendered table. It handles the real
+messiness of these exports (PDF links disguised as hyperlink text,
+records with no date, provider names with embedded commas, cases from 49
+to 820 events), and goes beyond the floor with filters and grouping,
+automatic gap-in-treatment and key-event detection (both real arguments
+in personal-injury cases, not decoration), a before/after-the-accident
+view, compact and detailed reading modes, PDF/PowerPoint export, and an
+AI assistant that answers questions and drafts summaries from the real
+event data. What we're proudest of: we didn't just build against the
+sample files — we deliberately tested against a brand-new synthetic
+Excel with edge cases we invented, and it caught two real bugs (a PDF
+link hidden in a hyperlink, and provider names shredded by a naive comma
+split) that would otherwise have silently corrupted data in front of the
+judges.
