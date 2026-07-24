@@ -24,6 +24,16 @@ import {
 import { FilterBar } from "./FilterBar";
 import { exportCaseToPdf } from "@/lib/export-pdf";
 import { exportCaseToPptx } from "@/lib/export-pptx";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CloseIcon,
+  DiamondIcon,
+  ExternalLinkIcon,
+  FlagIcon,
+  StarIcon,
+  SwapIcon,
+} from "@/components/icons";
 
 /**
  * Central timeline component (Person B). Receives an already-parsed
@@ -305,8 +315,12 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
                     : "border-accent-ochre/40 bg-accent-ochre/10 text-accent-ochre"
                 }`}
               >
-                {milestone.type === "accident" ? "⚑" : "◆"} {milestone.label} &middot;{" "}
-                {rangeFormatter.format(milestone.date)}
+                {milestone.type === "accident" ? (
+                  <FlagIcon className="h-3 w-3" />
+                ) : (
+                  <DiamondIcon className="h-3 w-3" />
+                )}{" "}
+                {milestone.label} &middot; {rangeFormatter.format(milestone.date)}
               </span>
             ))}
             {viewMode === "timeline" && accidentMilestone && (
@@ -314,13 +328,18 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
                 type="button"
                 onClick={() => setShowBeforeAfter((v) => !v)}
                 aria-pressed={showBeforeAfter}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
                   showBeforeAfter
                     ? "border-accent-rust bg-accent-rust text-background"
                     : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
                 }`}
               >
-                {showBeforeAfter ? "✕ Exit before/after view" : "⇄ Compare before/after"}
+                {showBeforeAfter ? (
+                  <CloseIcon className="h-3.5 w-3.5" />
+                ) : (
+                  <SwapIcon className="h-3.5 w-3.5" />
+                )}
+                {showBeforeAfter ? "Exit before/after view" : "Compare before/after"}
               </button>
             )}
           </div>
@@ -521,9 +540,9 @@ function CalendarView({
           type="button"
           onClick={() => goToMonth(-1)}
           aria-label="Previous month"
-          className="rounded-full border border-paper-line px-3 py-1.5 text-sm text-foreground transition hover:border-foreground/40"
+          className="rounded-full border border-paper-line p-2 text-foreground transition hover:border-foreground/40"
         >
-          ‹
+          <ChevronLeftIcon className="h-4 w-4" />
         </button>
         <h2 className="font-display text-xl italic text-foreground">
           {calendarMonthFormatter.format(visibleMonth)}
@@ -532,9 +551,9 @@ function CalendarView({
           type="button"
           onClick={() => goToMonth(1)}
           aria-label="Next month"
-          className="rounded-full border border-paper-line px-3 py-1.5 text-sm text-foreground transition hover:border-foreground/40"
+          className="rounded-full border border-paper-line p-2 text-foreground transition hover:border-foreground/40"
         >
-          ›
+          <ChevronRightIcon className="h-4 w-4" />
         </button>
       </div>
 
@@ -639,9 +658,9 @@ function DayDetailModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-lg leading-none text-ink-muted hover:text-foreground"
+            className="text-ink-muted hover:text-foreground"
           >
-            ✕
+            <CloseIcon className="h-5 w-5" />
           </button>
         </div>
 
@@ -768,8 +787,18 @@ function CompactEventCard({ event, accent }: { event: MedicalEvent; accent: Acce
       <span className="text-xs text-ink-muted">
         {event.facility || "Facility not specified"}
       </span>
-      {keyEventLabel && <span className="text-xs text-foreground">★ {keyEventLabel}</span>}
-      {hasPdf && <span className="text-xs text-accent-slate">View PDF ↗</span>}
+      {keyEventLabel && (
+        <span className="inline-flex items-center gap-1 text-xs text-foreground">
+          <StarIcon className="h-3 w-3" />
+          {keyEventLabel}
+        </span>
+      )}
+      {hasPdf && (
+        <span className="inline-flex items-center gap-1 text-xs text-accent-slate">
+          View PDF
+          <ExternalLinkIcon className="h-3 w-3" />
+        </span>
+      )}
     </div>
   );
 
@@ -855,7 +884,8 @@ function EventCard({
             className="inline-flex items-center gap-1 rounded-full border border-foreground/25 bg-foreground/5 px-2 py-0.5 text-[11px] font-medium text-foreground"
             title="Automatically flagged as a likely key event"
           >
-            ★ {keyEventLabel}
+            <StarIcon className="h-2.5 w-2.5" />
+            {keyEventLabel}
           </span>
         )}
       </div>
@@ -931,9 +961,10 @@ function EventCard({
           href={event.pdfUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2.5 inline-block text-xs font-medium text-accent-slate hover:underline"
+          className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-accent-slate hover:underline"
         >
-          View source document &#8599;
+          View source document
+          <ExternalLinkIcon className="h-3 w-3" />
         </a>
       )}
     </>
@@ -973,11 +1004,11 @@ function MilestoneRow({ milestone }: { milestone: Milestone }) {
           }`}
         >
           <p
-            className={`font-display text-lg font-medium ${
+            className={`flex items-center gap-1.5 font-display text-lg font-medium ${
               isAccident ? "text-accent-rust" : "text-accent-ochre"
             }`}
           >
-            {isAccident ? "⚑ " : "◆ "}
+            {isAccident ? <FlagIcon className="h-4 w-4" /> : <DiamondIcon className="h-4 w-4" />}
             {milestone.label}
           </p>
           {milestone.notes && <p className="mt-1 text-sm text-ink-muted">{milestone.notes}</p>}
