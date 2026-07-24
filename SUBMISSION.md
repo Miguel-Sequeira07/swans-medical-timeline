@@ -24,7 +24,7 @@ Final answers, ready to copy into the hackathon's submission form.
 
 ## Approximate cost to run one case through the app
 
-~$0.05 to ~$1.00 per case, measured against real Gemini usage (not
+~$0.01 to ~$0.20 per case, measured against real Gemini usage (not
 estimated). Full breakdown in
 [`docs/custo-por-caso.md`](./docs/custo-por-caso.md). Our 5 sample cases
 ranged from 49 to 820 medical events, and cost scales almost entirely
