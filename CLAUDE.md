@@ -60,6 +60,21 @@ prompt makes Gemini answer in Portuguese, which would be unusable. Rule:
 documentation (this file, README, CHECKLIST, docs/) are in English,
 always.** There is no internal-only exception — everything is English.
 
+## UI patterns worth knowing
+
+- **AI assistant is a floating widget, not inline content.** `CaseAssistant.tsx`
+  renders a fixed circular button (bottom-right) that toggles a small chat
+  panel, both `position: fixed`. It used to be a block at the bottom of
+  the page; that pushed content around and got buried under a long
+  timeline. Follow this pattern for any other persistent/global UI —
+  don't add more inline blocks competing with the timeline for space.
+- **Never nest interactive elements** (e.g. a `<button>` inside an `<a>`).
+  It's invalid HTML, React logs a `validateDOMNesting` warning for it, and
+  it already caused a real bug twice in `Timeline.tsx`'s `EventCard` (PDF
+  link wrapping the whole card, including edit/save buttons). If a card
+  needs both a link and buttons, only wrap the specific link text/element
+  in `<a>`, not the whole card.
+
 ## Who does what
 
 - **Person A — Data & AI**: detailed context in [`docs/pessoa-a-contexto.md`](./docs/pessoa-a-contexto.md)
