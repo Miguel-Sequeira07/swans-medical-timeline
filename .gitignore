@@ -1,2 +1,5 @@
 # Dados de clientes reais — nunca committar (repo público, dados sensíveis/PII)
 /sample-data/
+
+# Vercel CLI project link metadata (máquina-específico)
+.vercel
