@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Case, MedicalEvent, Milestone } from "@/types/event";
 import {
   buildCategoryGroups,
@@ -19,6 +19,7 @@ import {
   type TimelineEntry,
   type TimelineFilters,
   type ViewDensity,
+  type ViewMode,
 } from "@/lib/timeline";
 import { FilterBar } from "./FilterBar";
 import { exportCaseToPdf } from "@/lib/export-pdf";
@@ -60,6 +61,36 @@ const dayNumberFormatter = new Intl.DateTimeFormat("en-US", { day: "numeric" });
 const weekdayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const rangeFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 const monthLabelFormatter = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
+const calendarMonthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
+const dayDetailFormatter = new Intl.DateTimeFormat("en-US", {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function dayKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return dayKey(a) === dayKey(b);
+}
+
+/** Flat grid of cells for a month view, null for the leading/trailing blanks. */
+function buildCalendarCells(monthStart: Date): (Date | null)[] {
+  const year = monthStart.getFullYear();
+  const month = monthStart.getMonth();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
 
 /**
  * Compact "shape of the case" overview: one bar per calendar month,
@@ -141,6 +172,7 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
   const [groupBy, setGroupBy] = useState<GroupBy>("month");
   const [density, setDensity] = useState<ViewDensity>("detailed");
   const [showBeforeAfter, setShowBeforeAfter] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("timeline");
 
   const options = useMemo(() => caseFilterOptions(medicalCase), [medicalCase]);
   const filtered = useMemo(
@@ -255,7 +287,7 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
       <DensitySparkline
         months={monthlyCounts}
         accidentMonthKey={accidentMonthKey}
-        linkToSections={groupBy === "month" && !showBeforeAfter}
+        linkToSections={viewMode === "timeline" && groupBy === "month" && !showBeforeAfter}
       />
 
       {sortedMilestones.length > 0 && (
@@ -277,7 +309,7 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
                 {rangeFormatter.format(milestone.date)}
               </span>
             ))}
-            {accidentMilestone && (
+            {viewMode === "timeline" && accidentMilestone && (
               <button
                 type="button"
                 onClick={() => setShowBeforeAfter((v) => !v)}
@@ -292,7 +324,7 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
               </button>
             )}
           </div>
-          {showBeforeAfter && (
+          {viewMode === "timeline" && showBeforeAfter && (
             <p className="mt-1.5 text-xs text-ink-muted">
               Comparing before/after the accident — grouping is by month within each side.
             </p>
@@ -306,10 +338,12 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
           filters={filters}
           groupBy={groupBy}
           density={density}
+          viewMode={viewMode}
           isFiltered={isFiltered}
           onFiltersChange={setFilters}
           onGroupByChange={setGroupBy}
           onDensityChange={setDensity}
+          onViewModeChange={setViewMode}
           onClear={() => setFilters(createEmptyFilters())}
         />
       )}
@@ -318,6 +352,12 @@ export function Timeline({ case: medicalCase, onUpdateEventSummary }: TimelinePr
         <EmptyState />
       ) : noResults ? (
         <NoResultsState onClear={() => setFilters(createEmptyFilters())} />
+      ) : viewMode === "calendar" ? (
+        <CalendarView
+          dated={dated}
+          milestones={medicalCase.milestones}
+          onUpdateEventSummary={onUpdateEventSummary}
+        />
       ) : showBeforeAfter && beforeAfterSplit ? (
         <div className="grid gap-8 md:grid-cols-2 md:gap-6">
           <BeforeAfterColumn
@@ -411,6 +451,214 @@ function BeforeAfterColumn({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Month-grid calendar view. An alternative reading of the same filtered
+ * events — days with encounters get a marker; clicking one opens a modal
+ * with that day's encounters rendered exactly like the timeline's detailed
+ * cards (reuses EventRow/MilestoneRow directly). Empty days are inert.
+ */
+function CalendarView({
+  dated,
+  milestones,
+  onUpdateEventSummary,
+}: {
+  dated: MedicalEvent[];
+  milestones: Milestone[];
+  onUpdateEventSummary?: (eventId: string, summary: string) => void;
+}) {
+  const validMilestones = useMemo(
+    () => milestones.filter((m) => isValidDate(m.date)),
+    [milestones]
+  );
+
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const earliest = [...dated].sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+    const base = earliest ? earliest.date : new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+  });
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, MedicalEvent[]>();
+    for (const event of dated) {
+      const key = dayKey(event.date);
+      const list = map.get(key);
+      if (list) list.push(event);
+      else map.set(key, [event]);
+    }
+    return map;
+  }, [dated]);
+
+  const milestonesByDay = useMemo(() => {
+    const map = new Map<string, Milestone[]>();
+    for (const milestone of validMilestones) {
+      const key = dayKey(milestone.date);
+      const list = map.get(key);
+      if (list) list.push(milestone);
+      else map.set(key, [milestone]);
+    }
+    return map;
+  }, [validMilestones]);
+
+  const cells = useMemo(() => buildCalendarCells(visibleMonth), [visibleMonth]);
+
+  function goToMonth(delta: number) {
+    setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+  }
+
+  const selectedKey = selectedDay ? dayKey(selectedDay) : null;
+  const selectedDayEvents = selectedKey ? eventsByDay.get(selectedKey) ?? [] : [];
+  const selectedDayMilestones = selectedKey ? milestonesByDay.get(selectedKey) ?? [] : [];
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => goToMonth(-1)}
+          aria-label="Previous month"
+          className="rounded-full border border-paper-line px-3 py-1.5 text-sm text-foreground transition hover:border-foreground/40"
+        >
+          ‹
+        </button>
+        <h2 className="font-display text-xl italic text-foreground">
+          {calendarMonthFormatter.format(visibleMonth)}
+        </h2>
+        <button
+          type="button"
+          onClick={() => goToMonth(1)}
+          aria-label="Next month"
+          className="rounded-full border border-paper-line px-3 py-1.5 text-sm text-foreground transition hover:border-foreground/40"
+        >
+          ›
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wider text-ink-muted">
+        {WEEKDAY_LABELS.map((label) => (
+          <div key={label} className="pb-1">
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((day, i) => {
+          if (!day) return <div key={`blank-${i}`} />;
+          const key = dayKey(day);
+          const dayEvents = eventsByDay.get(key) ?? [];
+          const dayMilestones = milestonesByDay.get(key) ?? [];
+          const hasContent = dayEvents.length > 0 || dayMilestones.length > 0;
+          const hasAccident = dayMilestones.some((m) => m.type === "accident");
+          const today = isSameDay(day, new Date());
+
+          return (
+            <button
+              key={key}
+              type="button"
+              disabled={!hasContent}
+              onClick={() => setSelectedDay(day)}
+              className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-md border text-sm transition ${
+                hasContent
+                  ? "cursor-pointer border-paper-line bg-paper hover:border-foreground/40 hover:shadow-sm"
+                  : "border-transparent text-ink-muted/40"
+              } ${today ? "ring-1 ring-accent-slate" : ""}`}
+            >
+              <span className={hasContent ? "font-display text-foreground" : ""}>
+                {day.getDate()}
+              </span>
+              {hasContent && (
+                <span className="flex items-center gap-1">
+                  {hasAccident && <span className="h-1.5 w-1.5 rounded-full bg-accent-rust" />}
+                  {dayEvents.length > 0 && (
+                    <span className="text-[10px] font-medium text-ink-muted">
+                      {dayEvents.length}
+                    </span>
+                  )}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {selectedDay && (
+        <DayDetailModal
+          day={selectedDay}
+          events={selectedDayEvents}
+          milestones={selectedDayMilestones}
+          onClose={() => setSelectedDay(null)}
+          onUpdateEventSummary={onUpdateEventSummary}
+        />
+      )}
+    </div>
+  );
+}
+
+function DayDetailModal({
+  day,
+  events,
+  milestones,
+  onClose,
+  onUpdateEventSummary,
+}: {
+  day: Date;
+  events: MedicalEvent[];
+  milestones: Milestone[];
+  onClose: () => void;
+  onUpdateEventSummary?: (eventId: string, summary: string) => void;
+}) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-lg border border-paper-line bg-background p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="mb-4 flex items-start justify-between gap-4 border-b border-paper-line pb-3">
+          <h3 className="font-display text-xl italic text-foreground">
+            {dayDetailFormatter.format(day)}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-lg leading-none text-ink-muted hover:text-foreground"
+          >
+            ✕
+          </button>
+        </div>
+
+        <ol className="relative space-y-1">
+          {milestones.map((milestone) => (
+            <MilestoneRow key={milestone.id} milestone={milestone} />
+          ))}
+          {events.map((event) => (
+            <EventRow
+              key={event.id}
+              event={event}
+              density="detailed"
+              onUpdateEventSummary={onUpdateEventSummary}
+            />
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }

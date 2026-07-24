@@ -10,6 +10,7 @@ import type { Case, MedicalEvent, Milestone } from "@/types/event";
 
 export type GroupBy = "month" | "provider" | "medicineType" | "bodyPart";
 export type ViewDensity = "detailed" | "compact";
+export type ViewMode = "timeline" | "calendar";
 
 export interface TimelineFilters {
   query: string;

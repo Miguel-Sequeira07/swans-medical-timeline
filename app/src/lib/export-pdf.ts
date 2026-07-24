@@ -2,10 +2,21 @@ import { jsPDF } from "jspdf";
 import type { Case } from "@/types/event";
 import { buildMonthGroups, isValidDate, splitByDateValidity } from "@/lib/timeline";
 
-const MARGIN = 48;
+const MARGIN = 54;
 const PAGE_WIDTH = 595.28; // A4 pt
 const PAGE_HEIGHT = 841.89;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+
+/**
+ * Text colors chosen for contrast, not just palette match with the web
+ * UI — every tone here holds at least WCAG AA (4.5:1) against the white
+ * page, including the "muted" one, since gap/body-part/footer text is
+ * still content a reader needs, not decoration.
+ */
+const INK = [26, 22, 18];
+const INK_SECONDARY = [64, 56, 45];
+const INK_MUTED = [92, 84, 68];
+const RUST = [150, 55, 25];
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -19,7 +30,8 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
  * chronological timeline (including gap markers and milestones). Kept
  * intentionally simple (jsPDF's own text APIs, no custom layout engine)
  * since the bar for "done" here is that the file opens and shows the
- * right information, not visual parity with the web view.
+ * right information — legibly, at a normal reading size, with real
+ * contrast — not visual parity with the web view.
  */
 export function exportCaseToPdf(medicalCase: Case): void {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -44,16 +56,16 @@ export function exportCaseToPdf(medicalCase: Case): void {
 
   // Title
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.setTextColor(20, 18, 14);
+  doc.setFontSize(21);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
   doc.text(medicalCase.name, MARGIN, y);
-  y += 24;
+  y += 28;
 
   const { dated } = splitByDateValidity(medicalCase.events);
   const undatedCount = medicalCase.events.length - dated.length;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(110, 100, 85);
+  doc.setFontSize(11);
+  doc.setTextColor(INK_SECONDARY[0], INK_SECONDARY[1], INK_SECONDARY[2]);
   const rangeText =
     dated.length > 0
       ? `${dateFormatter.format(
@@ -64,81 +76,82 @@ export function exportCaseToPdf(medicalCase: Case): void {
         (undatedCount > 0 ? ` · ${undatedCount} undated` : "")
       : "No dated encounters";
   doc.text(rangeText, MARGIN, y);
-  y += 12;
+  y += 15;
   doc.text(`Generated ${dateFormatter.format(new Date())} by Medical Timeline`, MARGIN, y);
-  y += 20;
-  doc.setDrawColor(220, 210, 190);
+  y += 22;
+  doc.setDrawColor(200, 188, 165);
+  doc.setLineWidth(1);
   doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
-  y += 24;
+  y += 28;
 
   const groups = buildMonthGroups(dated, medicalCase.milestones);
 
   for (const group of groups) {
-    ensureSpace(30);
+    ensureSpace(34);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(20, 18, 14);
+    doc.setFontSize(15);
+    doc.setTextColor(INK[0], INK[1], INK[2]);
     doc.text(group.label, MARGIN, y);
-    y += 18;
+    y += 22;
 
     for (const entry of group.entries) {
       if (entry.kind === "gap") {
-        writeLines([`— ${entry.days}-day gap in treatment —`], 9, 14, [150, 140, 120]);
-        y += 4;
+        writeLines([`— ${entry.days}-day gap in treatment —`], 10, 16, INK_MUTED);
+        y += 6;
         continue;
       }
 
       if (entry.kind === "milestone") {
         const prefix = entry.milestone.type === "accident" ? "ACCIDENT" : "MILESTONE";
-        ensureSpace(16);
+        ensureSpace(18);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(150, 60, 30);
+        doc.setFontSize(12.5);
+        doc.setTextColor(RUST[0], RUST[1], RUST[2]);
         doc.text(
           `${prefix}: ${entry.milestone.label} — ${dateFormatter.format(entry.milestone.date)}`,
           MARGIN,
           y
         );
-        y += 14;
+        y += 16;
         if (entry.milestone.notes) {
           const noteLines = doc.splitTextToSize(entry.milestone.notes, CONTENT_WIDTH);
-          writeLines(noteLines, 9, 12, [130, 120, 105]);
+          writeLines(noteLines, 10, 14, INK_SECONDARY);
         }
-        y += 8;
+        y += 10;
         continue;
       }
 
       const event = entry.event;
-      ensureSpace(16);
+      ensureSpace(18);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(20, 18, 14);
+      doc.setFontSize(12.5);
+      doc.setTextColor(INK[0], INK[1], INK[2]);
       const dateLabel = isValidDate(event.date) ? dateFormatter.format(event.date) : "Undated";
       doc.text(`${dateLabel} — ${event.recordType || "Record"}`, MARGIN, y);
-      y += 14;
+      y += 17;
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 55, 45);
+      doc.setFontSize(11);
+      doc.setTextColor(INK_SECONDARY[0], INK_SECONDARY[1], INK_SECONDARY[2]);
       const providerLine = `${
         event.providers.length > 0 ? event.providers.join(", ") : "Provider not specified"
       } · ${event.facility || "Facility not specified"} · ${event.medicineType || "Unspecified"}`;
       const providerLines = doc.splitTextToSize(providerLine, CONTENT_WIDTH);
-      writeLines(providerLines, 10, 13, [60, 55, 45]);
+      writeLines(providerLines, 11, 15, INK_SECONDARY);
 
       if (event.summary) {
         const summaryLines = doc.splitTextToSize(event.summary, CONTENT_WIDTH);
-        writeLines(summaryLines, 9.5, 13, [90, 82, 68]);
+        writeLines(summaryLines, 10.5, 15, INK);
       }
 
       if (event.bodyParts.length > 0) {
-        writeLines([event.bodyParts.join(" · ")], 8.5, 12, [140, 130, 112]);
+        writeLines([event.bodyParts.join(" · ")], 9.5, 14, INK_MUTED);
       }
 
-      y += 10;
+      y += 14;
     }
 
-    y += 6;
+    y += 8;
   }
 
   // Page numbers
@@ -146,9 +159,9 @@ export function exportCaseToPdf(medicalCase: Case): void {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(150, 140, 120);
-    doc.text(`Page ${i} of ${pageCount}`, PAGE_WIDTH - MARGIN - 60, PAGE_HEIGHT - 24);
+    doc.setFontSize(9);
+    doc.setTextColor(INK_SECONDARY[0], INK_SECONDARY[1], INK_SECONDARY[2]);
+    doc.text(`Page ${i} of ${pageCount}`, PAGE_WIDTH - MARGIN - 64, PAGE_HEIGHT - 28);
   }
 
   doc.save(`${sanitizeFileName(medicalCase.name)}.pdf`);

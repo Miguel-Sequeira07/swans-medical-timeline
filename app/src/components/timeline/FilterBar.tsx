@@ -1,7 +1,16 @@
-import type { FilterOptions, GroupBy, TimelineFilters, ViewDensity } from "@/lib/timeline";
+"use client";
+
+import { useState } from "react";
+import type {
+  FilterOptions,
+  GroupBy,
+  TimelineFilters,
+  ViewDensity,
+  ViewMode,
+} from "@/lib/timeline";
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
-  { value: "month", label: "Timeline" },
+  { value: "month", label: "Chronological" },
   { value: "provider", label: "Provider" },
   { value: "medicineType", label: "Medicine type" },
   { value: "bodyPart", label: "Body part" },
@@ -10,6 +19,11 @@ const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
 const DENSITY_OPTIONS: { value: ViewDensity; label: string }[] = [
   { value: "detailed", label: "Detailed" },
   { value: "compact", label: "Compact" },
+];
+
+const VIEW_MODE_OPTIONS: { value: ViewMode; label: string }[] = [
+  { value: "timeline", label: "Timeline" },
+  { value: "calendar", label: "Calendar" },
 ];
 
 function toggle(set: Set<string>, value: string): Set<string> {
@@ -66,26 +80,39 @@ export function FilterBar({
   filters,
   groupBy,
   density,
+  viewMode,
   isFiltered,
   onFiltersChange,
   onGroupByChange,
   onDensityChange,
+  onViewModeChange,
   onClear,
 }: {
   options: FilterOptions;
   filters: TimelineFilters;
   groupBy: GroupBy;
   density: ViewDensity;
+  viewMode: ViewMode;
   isFiltered: boolean;
   onFiltersChange: (next: TimelineFilters) => void;
   onGroupByChange: (next: GroupBy) => void;
   onDensityChange: (next: ViewDensity) => void;
+  onViewModeChange: (next: ViewMode) => void;
   onClear: () => void;
 }) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const advancedCount =
+    filters.providers.size +
+    filters.medicineTypes.size +
+    filters.bodyParts.size +
+    (filters.dateFrom ? 1 : 0) +
+    (filters.dateTo ? 1 : 0);
+
   return (
     <div className="mb-8 rounded-lg border border-paper-line bg-paper/60 p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex-1 min-w-[220px]">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-[220px] flex-1">
           <label className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
             Search
           </label>
@@ -98,97 +125,19 @@ export function FilterBar({
           />
         </div>
 
-        <div className="flex gap-4">
-          <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
-              From
-            </label>
-            <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => onFiltersChange({ ...filters, dateFrom: e.target.value })}
-              className="mt-1 block rounded border border-paper-line bg-paper px-2 py-1 text-sm text-foreground"
-            />
-          </div>
-          <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
-              To
-            </label>
-            <input
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => onFiltersChange({ ...filters, dateTo: e.target.value })}
-              className="mt-1 block rounded border border-paper-line bg-paper px-2 py-1 text-sm text-foreground"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
-        <PillGroup
-          label="Provider"
-          values={options.providers}
-          selected={filters.providers}
-          onChange={(next) => onFiltersChange({ ...filters, providers: next })}
-        />
-        <PillGroup
-          label="Medicine type"
-          values={options.medicineTypes}
-          selected={filters.medicineTypes}
-          onChange={(next) => onFiltersChange({ ...filters, medicineTypes: next })}
-        />
-        <PillGroup
-          label="Body part"
-          values={options.bodyParts}
-          selected={filters.bodyParts}
-          onChange={(next) => onFiltersChange({ ...filters, bodyParts: next })}
-        />
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-paper-line pt-3">
-        <div className="flex flex-wrap gap-3">
-          <div className="flex flex-wrap gap-1.5">
-            {GROUP_OPTIONS.map((option) => {
-              const active = option.value === groupBy;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => onGroupByChange(option.value)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                    active
-                      ? "border-accent-slate bg-accent-slate/15 text-accent-slate"
-                      : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
-                  }`}
-                >
-                  Group by: {option.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-wrap gap-1.5 border-l border-paper-line pl-3">
-            {DENSITY_OPTIONS.map((option) => {
-              const active = option.value === density;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => onDensityChange(option.value)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                    active
-                      ? "border-accent-moss bg-accent-moss/15 text-accent-moss"
-                      : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
-                  }`}
-                >
-                  View: {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          aria-expanded={showAdvanced}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+            showAdvanced || advancedCount > 0
+              ? "border-accent-rust bg-accent-rust/10 text-accent-rust"
+              : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
+          }`}
+        >
+          Filters{advancedCount > 0 ? ` (${advancedCount})` : ""}
+          <span aria-hidden>{showAdvanced ? "▲" : "▼"}</span>
+        </button>
 
         {isFiltered && (
           <button
@@ -196,8 +145,127 @@ export function FilterBar({
             onClick={onClear}
             className="text-xs font-medium text-accent-rust hover:underline"
           >
-            Clear filters ×
+            Clear ×
           </button>
+        )}
+      </div>
+
+      {showAdvanced && (
+        <div className="mt-4 space-y-4 border-t border-paper-line pt-4">
+          <div className="flex flex-wrap gap-4">
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
+                From
+              </label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => onFiltersChange({ ...filters, dateFrom: e.target.value })}
+                className="mt-1 block rounded border border-paper-line bg-paper px-2 py-1 text-sm text-foreground"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
+                To
+              </label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => onFiltersChange({ ...filters, dateTo: e.target.value })}
+                className="mt-1 block rounded border border-paper-line bg-paper px-2 py-1 text-sm text-foreground"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-x-6 gap-y-3">
+            <PillGroup
+              label="Provider"
+              values={options.providers}
+              selected={filters.providers}
+              onChange={(next) => onFiltersChange({ ...filters, providers: next })}
+            />
+            <PillGroup
+              label="Medicine type"
+              values={options.medicineTypes}
+              selected={filters.medicineTypes}
+              onChange={(next) => onFiltersChange({ ...filters, medicineTypes: next })}
+            />
+            <PillGroup
+              label="Body part"
+              values={options.bodyParts}
+              selected={filters.bodyParts}
+              onChange={(next) => onFiltersChange({ ...filters, bodyParts: next })}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-paper-line pt-3">
+        <div className="flex flex-wrap gap-1.5">
+          {VIEW_MODE_OPTIONS.map((option) => {
+            const active = option.value === viewMode;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onViewModeChange(option.value)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                  active
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {viewMode === "timeline" && (
+          <>
+            <div className="flex flex-wrap gap-1.5 border-l border-paper-line pl-3">
+              {GROUP_OPTIONS.map((option) => {
+                const active = option.value === groupBy;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => onGroupByChange(option.value)}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                      active
+                        ? "border-accent-slate bg-accent-slate/15 text-accent-slate"
+                        : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
+                    }`}
+                  >
+                    Group by: {option.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 border-l border-paper-line pl-3">
+              {DENSITY_OPTIONS.map((option) => {
+                const active = option.value === density;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => onDensityChange(option.value)}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                      active
+                        ? "border-accent-moss bg-accent-moss/15 text-accent-moss"
+                        : "border-paper-line bg-paper text-ink-muted hover:border-foreground/40 hover:text-foreground"
+                    }`}
+                  >
+                    View: {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
