@@ -16,7 +16,7 @@ const publicSans = Public_Sans({
 
 export const metadata: Metadata = {
   title: "Medical Timeline",
-  description: "Timeline visual do tratamento médico para casos de danos pessoais.",
+  description: "A visual treatment timeline for a personal-injury case.",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="pt"
+      lang="en"
       className={`${fraunces.variable} ${publicSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

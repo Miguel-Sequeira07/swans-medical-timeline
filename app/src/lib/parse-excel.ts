@@ -1,34 +1,93 @@
 import * as XLSX from "xlsx";
-import type { MedicalEvent, RawMedicalEventRow } from "@/types/event";
+import type { MedicalEvent } from "@/types/event";
 
 /**
  * Regra de ouro do desafio: isto tem de funcionar com qualquer Excel neste
  * formato, não só com o ficheiro de amostra. Não assumir valores fixos de
  * provider/facility/medicine type — só a forma das colunas é garantida.
+ *
+ * "Link To Pdf" nos ficheiros reais do hackathon não é uma célula de texto
+ * com o URL — é a palavra "pdf" com um hyperlink por baixo (cell.l.Target).
+ * `sheet_to_json` ignora hyperlinks, por isso lemos célula a célula.
  */
+const EXPECTED_COLUMNS = [
+  "Encounter Date",
+  "Primary Provider",
+  "Facility",
+  "Body Parts",
+  "Medicine Type",
+  "Record Type",
+  "Summary",
+  "Link To Pdf",
+] as const;
+
+interface CellInfo {
+  text: string;
+  raw: unknown;
+  link?: string;
+}
+
 export async function parseExcelFile(file: File): Promise<MedicalEvent[]> {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<RawMedicalEventRow>(sheet, {
-    defval: "",
-  });
+  if (!sheet?.["!ref"]) {
+    throw new Error("This sheet is empty or has no valid data range.");
+  }
 
-  return rows.map((row, index) => normalizeRow(row, index));
+  const range = XLSX.utils.decode_range(sheet["!ref"]);
+  const headers = readRowCells(sheet, range.s.r, range).map((c) => c.text.trim());
+
+  const missing = EXPECTED_COLUMNS.filter((c) => !headers.includes(c));
+  if (missing.length > 0) {
+    throw new Error(
+      `This Excel doesn't match the expected format. Missing columns: ${missing.join(", ")}`
+    );
+  }
+
+  const events: MedicalEvent[] = [];
+  for (let r = range.s.r + 1; r <= range.e.r; r++) {
+    const cells = readRowCells(sheet, r, range);
+    const get = (name: string): CellInfo | undefined => cells[headers.indexOf(name)];
+
+    const summary = get("Summary")?.text.trim() ?? "";
+    const encounterDate = get("Encounter Date");
+    if (!summary && !encounterDate?.text) continue; // linha em branco, ignora
+
+    const pdfCell = get("Link To Pdf");
+
+    events.push({
+      id: `evt-${r}`,
+      date: parseDate(encounterDate?.raw ?? encounterDate?.text),
+      providers: splitList(get("Primary Provider")?.text),
+      facility: get("Facility")?.text.trim() ?? "",
+      bodyParts: splitList(get("Body Parts")?.text),
+      medicineType: get("Medicine Type")?.text.trim() ?? "",
+      recordType: get("Record Type")?.text.trim() ?? "",
+      summary,
+      pdfUrl: pdfCell?.link ?? (pdfCell?.text.trim() || undefined),
+    });
+  }
+
+  return events;
 }
 
-function normalizeRow(row: RawMedicalEventRow, index: number): MedicalEvent {
-  return {
-    id: `evt-${index}-${row["Encounter Date"]}`,
-    date: parseDate(row["Encounter Date"]),
-    providers: splitList(row["Primary Provider"]),
-    facility: row["Facility"]?.trim() ?? "",
-    bodyParts: splitList(row["Body Parts"]),
-    medicineType: row["Medicine Type"]?.trim() ?? "",
-    recordType: row["Record Type"]?.trim() ?? "",
-    summary: row["Summary"]?.trim() ?? "",
-    pdfUrl: row["Link To Pdf"]?.trim() || undefined,
-  };
+function readRowCells(
+  sheet: XLSX.WorkSheet,
+  row: number,
+  range: XLSX.Range
+): CellInfo[] {
+  const cells: CellInfo[] = [];
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const addr = XLSX.utils.encode_cell({ r: row, c });
+    const cell = sheet[addr] as XLSX.CellObject | undefined;
+    cells.push({
+      text: cell?.w ?? (cell?.v != null ? String(cell.v) : ""),
+      raw: cell?.v,
+      link: cell?.l?.Target,
+    });
+  }
+  return cells;
 }
 
 function splitList(value: string | undefined): string[] {
@@ -39,9 +98,11 @@ function splitList(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
-function parseDate(value: string | Date | undefined): Date {
+function parseDate(value: unknown): Date {
   if (value instanceof Date) return value;
-  if (!value) return new Date(NaN);
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? new Date(NaN) : parsed;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date(NaN);
 }

@@ -99,7 +99,7 @@ export function Timeline({ case: medicalCase }: { case: Case }) {
   const noResults = filtered.length === 0 && medicalCase.events.length > 0;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+    <div className="w-full">
       <header className="mb-6 border-b border-paper-line pb-6">
         <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Medical Timeline</p>
         <h1 className="mt-1 font-display text-3xl italic text-foreground sm:text-4xl">

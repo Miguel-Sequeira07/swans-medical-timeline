@@ -55,7 +55,7 @@ sobre checklist superficial. Escolham menos features e façam-nas bem.
 ## Stack
 
 - **Next.js + React + TypeScript** (`app/`), Tailwind CSS
-- **Gemini API** para as features de AI
+- **Gemini API** (`@google/genai`, modelo `gemini-3.6-flash`) para as features de AI
 - Parsing de Excel: `xlsx` (SheetJS), no cliente
 - Export: `jspdf` (PDF) / `pptxgenjs` (PowerPoint)
 - Persistência: `localStorage` (client-side, simples e válido para o desafio —
@@ -121,22 +121,34 @@ para branches longas hoje.
 
 ## Estado do projeto (atualizar ao longo do dia)
 
-**Já feito:**
-- Repo criado e no GitHub: https://github.com/Miguel-Sequeira07/swans-medical-timeline (público)
-- Scaffold Next.js + TypeScript + Tailwind, a compilar sem erros (`npx tsc --noEmit`)
-- Dependências instaladas: `xlsx`, `@google/generative-ai`, `jspdf`, `pptxgenjs`
+**Já feito (Pessoa A — floor + AI + persistência):**
+- Repo no GitHub: https://github.com/Miguel-Sequeira07/swans-medical-timeline (público)
+- Scaffold Next.js + TypeScript + Tailwind, `npx tsc --noEmit` e `npm run build` limpos
+- Dependências: `xlsx`, `@google/genai` (não `@google/generative-ai`, descontinuado), `jspdf`, `pptxgenjs`
 - Schema partilhado em `src/types/event.ts` (`MedicalEvent`, `Milestone`, `Case`)
-- `src/lib/parse-excel.ts` — parser Excel → `MedicalEvent[]` (funcional, por validar com Excel real)
-- `src/lib/ai.ts` — stub Gemini com `askCaseQuestion` e `summarizeTreatment` (por testar, precisa de API key)
-- `src/components/timeline/Timeline.tsx` — timeline mínima em lista (ponto de partida, não é o floor final)
+- `src/lib/parse-excel.ts` — parser Excel → `MedicalEvent[]`, validado contra os 5 Excel reais em
+  `sample-data/` (49-820 linhas cada), incluindo o bug do hyperlink em `Link To Pdf` (ver
+  `CHECKLIST.md`, secção "Descobertas ao validar com dados reais")
+- `src/components/upload/ExcelUploader.tsx` + `src/app/page.tsx` — upload → parse → estado da app
+  (o floor completo, ponta a ponta)
+- `src/components/milestones/MilestoneForm.tsx` — marco manual da data do acidente
+- `src/lib/ai.ts` + rotas `src/app/api/{case-qa,case-summary,rephrase-summary}` +
+  `src/components/ai/CaseAssistant.tsx` — Q&A e resumo do tratamento com Gemini
+  (`gemini-3.6-flash`, `thinkingLevel: minimal`), **testado com chave real, respostas em inglês**
+- `src/lib/storage.ts` + `src/hooks/use-cases.ts` — persistência local (até 5 casos), casos
+  anteriores listados no ecrã de upload
+- Toda a UI em inglês (utilizadores reais são advogados/júris nos EUA — ver `CLAUDE.md`)
+- `src/components/timeline/Timeline.tsx` — timeline mínima em lista (ponto de partida da Pessoa
+  B, não é o floor visual final)
 
 **Por fazer a seguir (ordem sugerida):**
-1. Obter/gerar uma Gemini API key e colocar em `app/.env.local`
-2. Confirmar o Excel de amostra do hackathon (QR "Slides & Excel files" nos slides) e testar o parser com ele
-3. Pessoa A: ligar upload de ficheiro → `parseExcelFile` → estado da app
-4. Pessoa B: construir a timeline real (visual, não lista simples) a partir do `Timeline.tsx`
-5. Só depois: features do "ceiling" (ver backlog acima), escolher poucas e bem feitas
-6. Deploy no Vercel assim que houver algo a mostrar (deploy cedo, iterar em produção)
+1. Pessoa B: construir a timeline real (visual, não lista simples) a partir do `Timeline.tsx` —
+   já recebe dados reais via `page.tsx`, incluindo casos com linhas sem data (ver descobertas)
+2. Features do "ceiling" que sobrarem (ver backlog acima), escolher poucas e bem feitas
+3. Deploy no Vercel assim que houver algo a mostrar (deploy cedo, iterar em produção) — lembrar
+   de configurar `GOOGLE_GENERATIVE_AI_API_KEY` nas env vars do Vercel, não só local
+4. Testar no browser de verdade (upload real, milestone, AI) — ainda só testado por HTTP/curl,
+   nunca clicado numa UI real
 
 ## Setup local
 

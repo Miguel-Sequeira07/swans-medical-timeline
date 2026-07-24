@@ -43,6 +43,12 @@ nos primeiros 30 segundos, e é o critério de avaliação com mais peso.
 8. Responsividade e polish — "ease of use" e "keeper test" são critérios de
    avaliação explícitos: sem instruções complexas, sem fricção.
 
+## Idioma
+
+Tudo o que o utilizador vê (labels, botões, mensagens) é em **inglês** —
+os utilizadores reais são advogados/júris nos EUA e os juízes do
+hackathon usam a app diretamente. Ver [`../CLAUDE.md`](../CLAUDE.md).
+
 ## Regras que não podes esquecer
 
 - **Nunca hardcode** suposições sobre os dados de amostra (nº de eventos,
