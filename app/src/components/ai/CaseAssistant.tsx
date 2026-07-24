@@ -64,7 +64,7 @@ export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistant
         <div
           role="dialog"
           aria-label="AI assistant"
-          className="fixed bottom-24 right-4 z-50 flex max-h-[70vh] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-xl border border-paper-line bg-background shadow-xl sm:bottom-28 sm:right-6"
+          className="fixed bottom-24 right-4 z-[60] flex max-h-[70vh] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-xl border border-paper-line bg-background shadow-xl sm:bottom-28 sm:right-6"
         >
           <div className="flex items-center justify-between border-b border-paper-line px-4 py-3">
             <h3 className="font-display text-sm italic text-foreground">AI assistant</h3>
@@ -88,7 +88,7 @@ export function CaseAssistant({ medicalCase, open, onOpenChange }: CaseAssistant
         onClick={() => onOpenChange(!open)}
         aria-expanded={open}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
-        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:opacity-90 sm:bottom-6 sm:right-6"
+        className="fixed bottom-4 right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:opacity-90 sm:bottom-6 sm:right-6"
       >
         {open ? <CloseIcon /> : <ChatIcon />}
       </button>
