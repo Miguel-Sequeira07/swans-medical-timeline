@@ -9,6 +9,7 @@ import type { Case, MedicalEvent, Milestone } from "@/types/event";
  */
 
 export type GroupBy = "month" | "provider" | "medicineType" | "bodyPart";
+export type ViewDensity = "detailed" | "compact";
 
 export interface TimelineFilters {
   query: string;
@@ -122,7 +123,8 @@ export function filterEvents(events: MedicalEvent[], filters: TimelineFilters): 
 
 export type TimelineEntry =
   | { kind: "event"; date: Date; event: MedicalEvent }
-  | { kind: "milestone"; date: Date; milestone: Milestone };
+  | { kind: "milestone"; date: Date; milestone: Milestone }
+  | { kind: "gap"; date: Date; days: number; fromDate: Date; toDate: Date };
 
 export interface MonthGroup {
   key: string;
@@ -132,15 +134,45 @@ export interface MonthGroup {
   eventCount: number;
 }
 
-export function buildMonthGroups(events: MedicalEvent[], milestones: Milestone[]): MonthGroup[] {
+/**
+ * Gaps in treatment matter to a personal-injury case (insurers point to
+ * them to argue the injury wasn't serious), so a gap this long or longer
+ * between two consecutive encounters gets its own marker in the
+ * chronological view.
+ */
+export const DEFAULT_GAP_THRESHOLD_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export function buildMonthGroups(
+  events: MedicalEvent[],
+  milestones: Milestone[],
+  gapThresholdDays: number = DEFAULT_GAP_THRESHOLD_DAYS
+): MonthGroup[] {
   const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
 
-  const entries: TimelineEntry[] = [
+  const baseEntries: TimelineEntry[] = [
     ...events.map((event) => ({ kind: "event" as const, date: event.date, event })),
     ...milestones
       .filter((milestone) => isValidDate(milestone.date))
       .map((milestone) => ({ kind: "milestone" as const, date: milestone.date, milestone })),
   ].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // Insert gap markers between consecutive *events* (milestones don't
+  // count as treatment, so they don't reset the gap clock).
+  const entries: TimelineEntry[] = [];
+  let previousEventDate: Date | null = null;
+  for (const entry of baseEntries) {
+    if (entry.kind === "event") {
+      if (previousEventDate) {
+        const days = Math.round((entry.date.getTime() - previousEventDate.getTime()) / MS_PER_DAY);
+        if (days >= gapThresholdDays) {
+          entries.push({ kind: "gap", date: entry.date, days, fromDate: previousEventDate, toDate: entry.date });
+        }
+      }
+      previousEventDate = entry.date;
+    }
+    entries.push(entry);
+  }
 
   const groups: MonthGroup[] = [];
   const index = new Map<string, MonthGroup>();
@@ -158,6 +190,32 @@ export function buildMonthGroups(events: MedicalEvent[], milestones: Milestone[]
   }
 
   return groups;
+}
+
+interface KeyEventRule {
+  label: string;
+  pattern: RegExp;
+}
+
+/**
+ * Detected from recordType/medicineType only (not the free-text summary)
+ * to keep false positives low — those fields are short, controlled-ish
+ * values, not prose. No AI call needed for this.
+ */
+const KEY_EVENT_RULES: KeyEventRule[] = [
+  { label: "Surgery", pattern: /\bsurger(y|ies)\b|\bsurgical\b|\boperative\b/i },
+  { label: "Imaging", pattern: /\bmri\b|\bct scan\b|\bx-?ray\b|\bimaging\b/i },
+  { label: "ER Visit", pattern: /\ber\b|\bemergency\b|\burgent care\b/i },
+  { label: "Discharge", pattern: /\bdischarge\b/i },
+  { label: "Hospital Admission", pattern: /\badmission\b|\binpatient\b/i },
+];
+
+export function detectKeyEvent(event: MedicalEvent): string | null {
+  const haystack = `${event.recordType} ${event.medicineType}`;
+  for (const rule of KEY_EVENT_RULES) {
+    if (rule.pattern.test(haystack)) return rule.label;
+  }
+  return null;
 }
 
 export interface CategoryGroup {
@@ -236,4 +294,39 @@ export function dateRangeOf(events: MedicalEvent[]): { start: Date; end: Date } 
 
 export function caseFilterOptions(medicalCase: Case): FilterOptions {
   return collectFilterOptions(medicalCase.events);
+}
+
+export interface MonthlyCount {
+  key: string;
+  date: Date;
+  count: number;
+}
+
+/**
+ * One bucket per calendar month from the first to the last dated event,
+ * *including* months with zero encounters — the empty gaps are as much
+ * the point of the sparkline as the busy months are.
+ */
+export function buildMonthlyCounts(events: MedicalEvent[]): MonthlyCount[] {
+  const dated = events.filter((event) => isValidDate(event.date));
+  if (dated.length === 0) return [];
+
+  const counts = new Map<string, number>();
+  for (const event of dated) {
+    const key = `${event.date.getFullYear()}-${event.date.getMonth()}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  const range = dateRangeOf(dated)!;
+  const months: MonthlyCount[] = [];
+  const cursor = new Date(range.start.getFullYear(), range.start.getMonth(), 1);
+  const end = new Date(range.end.getFullYear(), range.end.getMonth(), 1);
+
+  while (cursor <= end) {
+    const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+    months.push({ key, date: new Date(cursor), count: counts.get(key) ?? 0 });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  return months;
 }

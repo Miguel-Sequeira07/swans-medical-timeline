@@ -50,6 +50,17 @@ export default function Home() {
     });
   }
 
+  function updateEventSummary(eventId: string, summary: string) {
+    if (!medicalCase) return;
+    persist({
+      ...medicalCase,
+      events: medicalCase.events.map((event) =>
+        event.id === eventId ? { ...event, summary } : event
+      ),
+      updatedAt: new Date(),
+    });
+  }
+
   function handleDeleteCase(id: string) {
     deleteCase(id);
     if (medicalCase?.id === id) setMedicalCase(null);
@@ -98,7 +109,7 @@ export default function Home() {
             onAdd={addMilestone}
             onRemove={removeMilestone}
           />
-          <Timeline case={medicalCase} />
+          <Timeline case={medicalCase} onUpdateEventSummary={updateEventSummary} />
           <CaseAssistant medicalCase={medicalCase} />
         </section>
       )}
